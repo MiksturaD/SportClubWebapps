@@ -1,0 +1,13 @@
+# Flask settings
+SECRET_KEY=your-secret-key-here
+FLASK_ENV=development
+
+# Database
+DATABASE_URL=sqlite:///sportclub.db
+
+# Telegram Bot settings
+TELEGRAM_BOT_TOKEN=your-bot-token-here
+TELEGRAM_WEBAPP_URL=https://your-domain.ngrok.io
+
+# Admin Telegram ID (замените на реальный ID администратора)
+ADMIN_TELEGRAM_ID=123456789

@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Спортивный клуб</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px 0;
+            border-bottom: 1px solid var(--tg-theme-hint-color, #999999);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: var(--tg-theme-hint-color, #999999);
+            font-size: 14px;
+        }
+
+        .sport-groups {
+            display: grid;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .sport-group-card {
+            background: var(--tg-theme-secondary-bg-color, #f8f9fa);
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid var(--tg-theme-button-color, #007bff);
+        }
+
+        .sport-group-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.15);
+        }
+
+        .sport-group-card h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--tg-theme-text-color, #000000);
+        }
+
+        .sport-group-card p {
+            font-size: 14px;
+            color: var(--tg-theme-hint-color, #999999);
+            margin-bottom: 12px;
+        }
+
+        .prices {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .price-tag {
+            background: var(--tg-theme-button-color, #007bff);
+            color: var(--tg-theme-button-text-color, #ffffff);
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .admin-panel {
+            background: var(--tg-theme-secondary-bg-color, #f8f9fa);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .admin-panel h2 {
+            font-size: 20px;
+            margin-bottom: 15px;
+            color: var(--tg-theme-text-color, #000000);
+        }
+
+        .admin-buttons {
+            display: grid;
+            gap: 10px;
+        }
+
+        .btn {
+            background: var(--tg-theme-button-color, #007bff);
+            color: var(--tg-theme-button-text-color, #ffffff);
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: var(--tg-theme-secondary-bg-color, #f8f9fa);
+            color: var(--tg-theme-text-color, #000000);
+            border: 1px solid var(--tg-theme-button-color, #007bff);
+        }
+
+        .parent-panel {
+            background: var(--tg-theme-secondary-bg-color, #f8f9fa);
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .parent-panel h2 {
+            font-size: 20px;
+            margin-bottom: 15px;
+            color: var(--tg-theme-text-color, #000000);
+        }
+
+        .parent-buttons {
+            display: grid;
+            gap: 10px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--tg-theme-bg-color, #ffffff);
+            border-radius: 12px;
+            padding: 20px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--tg-theme-hint-color, #999999);
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--tg-theme-hint-color, #999999);
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: var(--tg-theme-text-color, #000000);
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--tg-theme-hint-color, #999999);
+            border-radius: 6px;
+            font-size: 16px;
+            background: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .schedule-item {
+            background: var(--tg-theme-secondary-bg-color, #f8f9fa);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+
+        .schedule-day {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .schedule-time {
+            color: var(--tg-theme-hint-color, #999999);
+            font-size: 14px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: var(--tg-theme-hint-color, #999999);
+        }
+
+        .error {
+            background: #ff6b6b;
+            color: white;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
+
+        .success {
+            background: #51cf66;
+            color: white;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .sport-group-card {
+                padding: 15px;
+            }
+            
+            .prices {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏋️ Спортивный клуб Тайику</h1>
+            <p>Выберите группу для просмотра информации</p>
+        </div>
+
+        <!-- Спортивные группы -->
+        <div class="sport-groups" id="sportGroups">
+            <div class="loading">Загрузка групп...</div>
+        </div>
+
+        <!-- Административная панель -->
+        <div class="admin-panel" id="adminPanel" style="display: none;">
+            <h2>👨‍💼 Административная панель</h2>
+            <div class="admin-buttons">
+                <button class="btn" onclick="showModal('participantsModal')">📝 Регистрация участников</button>
+                <button class="btn" onclick="showModal('scheduleModal')">📅 Расписание тренировок</button>
+                <button class="btn" onclick="showModal('paymentsModal')">💰 Система учета оплаты</button>
+                <button class="btn" onclick="showModal('discountsModal')">🎫 Скидки и акции</button>
+            </div>
+        </div>
+
+        <!-- Панель для родителей -->
+        <div class="parent-panel" id="parentPanel" style="display: none;">
+            <h2>👨‍👩‍👧‍👦 Панель родителя</h2>
+            <div class="parent-buttons">
+                <button class="btn btn-secondary" onclick="showModal('contactModal')">📞 Связаться с администрацией</button>
+                <button class="btn" onclick="showModal('paymentModal')">💳 Оплатить</button>
+                <button class="btn btn-secondary" onclick="showModal('transferModal')">🔄 Перенос занятия</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальные окна -->
+
+    <!-- Модальное окно регистрации участников -->
+    <div class="modal" id="participantsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Регистрация участников</h3>
+                <button class="close-btn" onclick="closeModal('participantsModal')">&times;</button>
+            </div>
+            <form id="participantForm">
+                <div class="form-group">
+                    <label for="fullName">ФИО участника</label>
+                    <input type="text" id="fullName" required>
+                </div>
+                <div class="form-group">
+                    <label for="parentPhone">Телефон родителя</label>
+                    <input type="tel" id="parentPhone" required>
+                </div>
+                <div class="form-group">
+                    <label for="birthDate">Дата рождения</label>
+                    <input type="date" id="birthDate" required>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="medicalCertificate">
+                        Медицинская справка
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label for="discountType">Тип скидки</label>
+                    <select id="discountType">
+                        <option value="">Без скидки</option>
+                        <option value="Семейная скидка">Семейная скидка</option>
+                        <option value="Многодетная семья">Многодетная семья</option>
+                        <option value="Студенческая скидка">Студенческая скидка</option>
+                        <option value="Скидка за реферала">Скидка за реферала</option>
+                        <option value="Сезонная скидка">Сезонная скидка</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="discountPercent">Процент скидки</label>
+                    <input type="number" id="discountPercent" min="0" max="100" value="0">
+                </div>
+                <button type="submit" class="btn">Зарегистрировать</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Модальное окно расписания -->
+    <div class="modal" id="scheduleModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Расписание тренировок</h3>
+                <button class="close-btn" onclick="closeModal('scheduleModal')">&times;</button>
+            </div>
+            <form id="scheduleForm">
+                <div class="form-group">
+                    <label for="scheduleGroup">Вид тренировки</label>
+                    <select id="scheduleGroup" required>
+                        <option value="">Выберите группу</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="dayOfWeek">День недели</label>
+                    <select id="dayOfWeek" required>
+                        <option value="0">Понедельник</option>
+                        <option value="1">Вторник</option>
+                        <option value="2">Среда</option>
+                        <option value="3">Четверг</option>
+                        <option value="4">Пятница</option>
+                        <option value="5">Суббота</option>
+                        <option value="6">Воскресенье</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="startTime">Время начала</label>
+                    <input type="time" id="startTime" required>
+                </div>
+                <div class="form-group">
+                    <label for="endTime">Время окончания</label>
+                    <input type="time" id="endTime" required>
+                </div>
+                <button type="submit" class="btn">Добавить расписание</button>
+            </form>
+            <div id="scheduleList" style="margin-top: 20px;">
+                <h4>Текущее расписание:</h4>
+                <div class="loading">Загрузка расписания...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно платежей -->
+    <div class="modal" id="paymentsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Система учета оплаты</h3>
+                <button class="close-btn" onclick="closeModal('paymentsModal')">&times;</button>
+            </div>
+            <div id="paymentsList">
+                <div class="loading">Загрузка платежей...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно скидок -->
+    <div class="modal" id="discountsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Скидки и акции</h3>
+                <button class="close-btn" onclick="closeModal('discountsModal')">&times;</button>
+            </div>
+            <form id="discountForm">
+                <div class="form-group">
+                    <label for="discountName">Название акции</label>
+                    <input type="text" id="discountName" required>
+                </div>
+                <div class="form-group">
+                    <label for="discountDescription">Описание</label>
+                    <textarea id="discountDescription" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="discountTypeAdmin">Тип скидки</label>
+                    <select id="discountTypeAdmin" required>
+                        <option value="Семейная скидка">Семейная скидка</option>
+                        <option value="Многодетная семья">Многодетная семья</option>
+                        <option value="Студенческая скидка">Студенческая скидка</option>
+                        <option value="Скидка за реферала">Скидка за реферала</option>
+                        <option value="Сезонная скидка">Сезонная скидка</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="discountPercentAdmin">Процент скидки</label>
+                    <input type="number" id="discountPercentAdmin" min="0" max="100" required>
+                </div>
+                <div class="form-group">
+                    <label for="discountStartDate">Дата начала</label>
+                    <input type="date" id="discountStartDate">
+                </div>
+                <div class="form-group">
+                    <label for="discountEndDate">Дата окончания</label>
+                    <input type="date" id="discountEndDate">
+                </div>
+                <button type="submit" class="btn">Добавить скидку</button>
+            </form>
+            <div id="discountsList" style="margin-top: 20px;"></div>
+        </div>
+    </div>
+
+    <!-- Модальное окно связи -->
+    <div class="modal" id="contactModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Связаться с администрацией</h3>
+                <button class="close-btn" onclick="closeModal('contactModal')">&times;</button>
+            </div>
+            <div id="contactInfo">
+                <div class="loading">Загрузка контактов...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно оплаты -->
+    <div class="modal" id="paymentModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Оплата занятий</h3>
+                <button class="close-btn" onclick="closeModal('paymentModal')">&times;</button>
+            </div>
+            <form id="paymentForm">
+                <div class="form-group">
+                    <label for="paymentGroup">Вид тренировки</label>
+                    <select id="paymentGroup" required>
+                        <option value="">Выберите группу</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="subscriptionType">Тип абонемента</label>
+                    <select id="subscriptionType" required>
+                        <option value="8 занятий">8 занятий</option>
+                        <option value="12 занятий">12 занятий</option>
+                        <option value="Разовые занятия">Разовые занятия</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="paymentAmount">Сумма к оплате</label>
+                    <input type="number" id="paymentAmount" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="paymentMethod">Способ оплаты</label>
+                    <select id="paymentMethod" required>
+                        <option value="cash">Наличные</option>
+                        <option value="card">Банковская карта</option>
+                        <option value="transfer">Банковский перевод</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn">Оплатить</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Модальное окно переноса -->
+    <div class="modal" id="transferModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Перенос занятия</h3>
+                <button class="close-btn" onclick="closeModal('transferModal')">&times;</button>
+            </div>
+            <form id="transferForm">
+                <div class="form-group">
+                    <label for="originalDate">Исходная дата</label>
+                    <input type="date" id="originalDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="newDate">Новая дата</label>
+                    <input type="date" id="newDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="transferReason">Причина переноса</label>
+                    <textarea id="transferReason" required placeholder="Укажите причину переноса занятия"></textarea>
+                </div>
+                <button type="submit" class="btn">Запросить перенос</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="static/js/app.js"></script>
+</body>
+</html>
