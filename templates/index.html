@@ -54,7 +54,6 @@
             background: rgba(255,255,255,0.04);
             border-radius: 14px;
             padding: 16px 16px 14px;
-            cursor: pointer;
             transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
             border: 1px solid rgba(255,255,255,0.08);
             backdrop-filter: blur(6px);
@@ -64,6 +63,16 @@
             transform: translateY(-2px);
             box-shadow: 0 10px 24px rgba(0,0,0,0.28);
             background: rgba(255,255,255,0.06);
+        }
+        
+        .group-content {
+            cursor: pointer;
+        }
+        
+        .group-actions {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255,255,255,0.1);
         }
 
         .sport-group-card h3 {
@@ -284,6 +293,523 @@
             margin-bottom: 12px;
         }
 
+        /* Стили для посещаемости */
+        .attendance-group {
+            background: rgba(255,255,255,0.04);
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .attendance-group:hover {
+            background: rgba(255,255,255,0.06);
+            transform: translateY(-1px);
+        }
+
+        .attendance-date {
+            background: rgba(255,255,255,0.04);
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .attendance-date:hover {
+            background: rgba(255,255,255,0.06);
+        }
+
+        .attendance-date.completed {
+            border-color: #10b981;
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .attendance-date.pending {
+            border-color: #f59e0b;
+            background: rgba(245, 158, 11, 0.1);
+        }
+
+        .participant-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            background: rgba(255,255,255,0.04);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .participant-info {
+            flex: 1;
+        }
+        
+        /* Стили для платежей */
+        .payment-item {
+            border-left: 4px solid #6b7280;
+        }
+        
+        .payment-item.pending {
+            border-left-color: #f59e0b;
+        }
+        
+        .payment-item.approved {
+            border-left-color: #10b981;
+        }
+        
+        .payment-item.rejected {
+            border-left-color: #ef4444;
+        }
+        
+        .payment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .payment-participant {
+            font-weight: bold;
+            color: #ffffff;
+        }
+        
+        .payment-status {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .payment-status.pending {
+            background: #f59e0b;
+            color: #000000;
+        }
+        
+        .payment-status.approved {
+            background: #10b981;
+            color: #ffffff;
+        }
+        
+        .payment-status.rejected {
+            background: #ef4444;
+            color: #ffffff;
+        }
+        
+        .payment-details {
+            margin-bottom: 8px;
+        }
+        
+        .payment-details div {
+            margin-bottom: 4px;
+            color: #d1d5db;
+        }
+        
+        .payment-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+        
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+        
+        /* Стили для учеников */
+        .student-item {
+            background: rgba(255,255,255,0.04);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 16px;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        
+        .student-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .student-name {
+            font-weight: bold;
+            font-size: 16px;
+            color: #ffffff;
+        }
+        
+        .student-phone {
+            color: #9ca3af;
+            font-size: 14px;
+        }
+        
+        .student-info {
+            margin-bottom: 12px;
+        }
+        
+        .student-info div {
+            margin-bottom: 4px;
+            color: #d1d5db;
+            font-size: 14px;
+        }
+        
+        .student-financial {
+            background: rgba(255,255,255,0.02);
+            border-radius: 8px;
+            padding: 12px;
+        }
+        
+        .financial-summary {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .financial-summary span {
+            color: #ffffff;
+            font-weight: 500;
+        }
+        
+        .subscriptions-list {
+            border-top: 1px solid rgba(255,255,255,0.1);
+            padding-top: 12px;
+        }
+        
+        .subscriptions-list h5 {
+            color: #ffffff;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .subscription-item {
+            background: rgba(255,255,255,0.02);
+            border-radius: 6px;
+            padding: 8px;
+            margin-bottom: 8px;
+            border-left: 3px solid #3b82f6;
+        }
+        
+        .subscription-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+        
+        .btn-small {
+            padding: 4px 8px;
+            font-size: 12px;
+            min-width: auto;
+        }
+        
+        .subscription-item div {
+            margin-bottom: 4px;
+            color: #d1d5db;
+            font-size: 13px;
+        }
+        
+        .no-subscriptions {
+            color: #9ca3af;
+            font-style: italic;
+            text-align: center;
+            padding: 12px;
+        }
+        
+        /* Стили для статистики */
+        .statistics-summary {
+            background: rgba(255,255,255,0.04);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin-top: 12px;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 12px;
+            background: rgba(255,255,255,0.02);
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ffffff;
+            margin-bottom: 4px;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        /* Стили для статистики группы */
+        .group-statistics {
+            background: rgba(255,255,255,0.04);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        
+        .group-statistics h4 {
+            color: #ffffff;
+            margin-bottom: 12px;
+        }
+        }
+
+        .participant-name {
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 4px;
+        }
+
+        .participant-phone {
+            font-size: 12px;
+            color: #9ca3af;
+        }
+
+        .attendance-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .attendance-controls {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+        
+        .reason-select {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 6px;
+            padding: 4px 8px;
+            color: #ffffff;
+            font-size: 12px;
+            min-width: 120px;
+        }
+        
+        .reason-select:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 44px;
+            height: 24px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .toggle-switch.active {
+            background: var(--tg-theme-button-color, #007bff);
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s ease;
+        }
+
+        .toggle-switch.active::after {
+            transform: translateX(20px);
+        }
+
+        .attendance-status {
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .attendance-status.present {
+            color: #10b981;
+        }
+
+        .attendance-status.absent {
+            color: #ef4444;
+        }
+
+        .stats-item {
+            background: rgba(255,255,255,0.04);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 8px;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .stats-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .stats-date {
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .stats-percentage {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .stats-percentage.high {
+            color: #10b981;
+        }
+
+        .stats-percentage.medium {
+            color: #f59e0b;
+        }
+
+        .stats-percentage.low {
+            color: #ef4444;
+        }
+
+        .stats-details {
+            display: flex;
+            gap: 12px;
+            font-size: 12px;
+            color: #9ca3af;
+        }
+
+        .back-btn {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: #e5e7eb;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+
+        .back-btn:hover {
+            background: rgba(255,255,255,0.15);
+        }
+
+        /* Стили для авторизации */
+        .authorized-participant {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid #10b981;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 8px;
+        }
+
+        .authorized-participant h5 {
+            color: #10b981;
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+
+        .authorized-participant p {
+            color: #9ca3af;
+            font-size: 12px;
+            margin: 0;
+        }
+
+        .auth-code-input {
+            text-align: center;
+            font-size: 18px;
+            font-weight: 600;
+            letter-spacing: 2px;
+        }
+
+        /* Стили для финансовой информации */
+        .financial-info {
+            background: rgba(255,255,255,0.04);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 8px;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .financial-info.low-balance {
+            border-color: #ef4444;
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .financial-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .participant-name {
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .balance-info {
+            display: flex;
+            gap: 12px;
+            font-size: 12px;
+            color: #9ca3af;
+        }
+
+        .balance-remaining {
+            font-weight: 600;
+        }
+
+        .balance-remaining.low {
+            color: #ef4444;
+        }
+
+        .balance-remaining.medium {
+            color: #f59e0b;
+        }
+
+        .balance-remaining.high {
+            color: #10b981;
+        }
+
+        .check-balance-btn {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-top: 8px;
+        }
+
+        .check-balance-btn:hover {
+            background: #dc2626;
+        }
+
         @media (max-width: 480px) {
             .container {
                 padding: 15px;
@@ -318,7 +844,10 @@
                 <button class="btn" onclick="showModal('participantsModal')">📝 Регистрация участников</button>
                 <button class="btn" onclick="showModal('scheduleModal')">📅 Расписание тренировок</button>
                 <button class="btn" onclick="showModal('paymentsModal')">💰 Система учета оплаты</button>
+                <button class="btn" onclick="showModal('studentsModal')">👥 Ученики</button>
                 <button class="btn" onclick="showModal('discountsModal')">🎫 Скидки и акции</button>
+                <button class="btn" onclick="showModal('attendanceModal')">📊 Посещаемость</button>
+                <button class="btn" onclick="checkLowBalance()">💰 Проверить балансы</button>
             </div>
         </div>
 
@@ -327,9 +856,11 @@
             <h2>👨‍👩‍👧‍👦 Панель родителя</h2>
             <div class="parent-buttons">
                 <button class="btn btn-secondary" onclick="showModal('contactModal')">📞 Связаться с администрацией</button>
-                <button class="btn" onclick="showModal('paymentModal')">💳 Оплатить</button>
+                <button class="btn" onclick="showModal('authorizationModal')">🔐 Авторизация</button>
+                <button class="btn" onclick="showModal('paymentModal')" id="paymentBtn" style="display: none;">💳 Оплатить</button>
                 <button class="btn" onclick="showModal('discountsModal')">🎫 Скидки и акции</button>
-                <button class="btn btn-secondary" onclick="showModal('transferModal')">🔄 Перенос занятия</button>
+                <button class="btn btn-secondary" onclick="showModal('transferModal')" id="transferBtn" style="display: none;">🔄 Перенос занятия</button>
+                <button class="btn" onclick="showModal('parentAttendanceModal')" id="attendanceBtn" style="display: none;">📊 Посещаемость</button>
             </div>
         </div>
     </div>
@@ -355,6 +886,12 @@
                 <div class="form-group">
                     <label for="birthDate">Дата рождения</label>
                     <input type="date" id="birthDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="participantGroup">Группа для регистрации</label>
+                    <select id="participantGroup" required>
+                        <option value="">Выберите группу</option>
+                    </select>
                 </div>
                 <div class="form-group">
                     <label>
@@ -438,6 +975,19 @@
         </div>
     </div>
 
+    <!-- Модальное окно учеников -->
+    <div class="modal" id="studentsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">👥 Ученики</h3>
+                <button class="close-btn" onclick="closeModal('studentsModal')">&times;</button>
+            </div>
+            <div id="studentsList">
+                <div class="loading">Загрузка учеников...</div>
+            </div>
+        </div>
+    </div>
+
     <!-- Модальное окно скидок -->
     <div class="modal" id="discountsModal">
         <div class="modal-content">
@@ -502,7 +1052,17 @@
                 <h3 class="modal-title">Оплата занятий</h3>
                 <button class="close-btn" onclick="closeModal('paymentModal')">&times;</button>
             </div>
+            <div id="financialInfo" style="margin-bottom: 20px;">
+                <h4 style="margin-bottom: 12px; color: #ffffff;">Финансовая информация:</h4>
+                <div class="loading">Загрузка данных...</div>
+            </div>
             <form id="paymentForm">
+                <div class="form-group">
+                    <label for="paymentParticipant">Участник</label>
+                    <select id="paymentParticipant" required>
+                        <option value="">Выберите участника</option>
+                    </select>
+                </div>
                 <div class="form-group">
                     <label for="paymentGroup">Вид тренировки</label>
                     <select id="paymentGroup" required>
@@ -556,6 +1116,100 @@
                 </div>
                 <button type="submit" class="btn">Запросить перенос</button>
             </form>
+        </div>
+    </div>
+
+    <!-- Модальное окно посещаемости (админ) -->
+    <div class="modal" id="attendanceModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">📊 Учет посещаемости</h3>
+                <button class="close-btn" onclick="closeModal('attendanceModal')">&times;</button>
+            </div>
+            <div id="attendanceContent">
+                <div class="loading">Загрузка групп...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно выбора даты посещаемости -->
+    <div class="modal" id="attendanceDateModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Выберите дату занятия</h3>
+                <button class="close-btn" onclick="closeModal('attendanceDateModal')">&times;</button>
+            </div>
+            <div id="attendanceDatesList">
+                <div class="loading">Загрузка дат...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно учета посещаемости -->
+    <div class="modal" id="attendanceRecordModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Учет посещаемости</h3>
+                <button class="close-btn" onclick="closeModal('attendanceRecordModal')">&times;</button>
+            </div>
+            <div id="attendanceRecordContent">
+                <div class="loading">Загрузка участников...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно статистики посещаемости -->
+    <div class="modal" id="attendanceStatsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Статистика посещаемости</h3>
+                <button class="close-btn" onclick="closeModal('attendanceStatsModal')">&times;</button>
+            </div>
+            <div id="attendanceStatsContent">
+                <div class="loading">Загрузка статистики...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно авторизации -->
+    <div class="modal" id="authorizationModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">🔐 Авторизация</h3>
+                <button class="close-btn" onclick="closeModal('authorizationModal')">&times;</button>
+            </div>
+            <div id="authorizationContent">
+                <div style="margin-bottom: 16px;">
+                    <h4 style="margin-bottom: 8px; color: #ffffff;">Введите код авторизации</h4>
+                    <p style="color: #9ca3af; font-size: 13px; margin-bottom: 12px;">
+                        Получите 6-значный код у администратора для доступа к управлению участником
+                    </p>
+                </div>
+                <form id="authorizationForm">
+                    <div class="form-group">
+                        <label for="authCode">Код авторизации</label>
+                        <input type="text" id="authCode" maxlength="6" placeholder="123456" required>
+                    </div>
+                    <button type="submit" class="btn">🔐 Авторизоваться</button>
+                </form>
+                <div id="authorizedParticipants" style="margin-top: 20px;">
+                    <h4 style="margin-bottom: 8px; color: #ffffff;">Ваши авторизованные участники:</h4>
+                    <div class="loading">Загрузка...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно посещаемости (родитель) -->
+    <div class="modal" id="parentAttendanceModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">📊 Посещаемость моих детей</h3>
+                <button class="close-btn" onclick="closeModal('parentAttendanceModal')">&times;</button>
+            </div>
+            <div id="parentAttendanceContent">
+                <div class="loading">Загрузка данных...</div>
+            </div>
         </div>
     </div>
 
