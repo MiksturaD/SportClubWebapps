@@ -1,0 +1,915 @@
+/* Основные стили для спортивного клуба */
+
+/* Сброс стилей */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Основные переменные */
+:root {
+    --primary-color: #667eea;
+    --secondary-color: #764ba2;
+    --success-color: #10b981;
+    --warning-color: #f59e0b;
+    --danger-color: #ef4444;
+    --text-primary: #ffffff;
+    --text-secondary: rgba(255,255,255,0.8);
+    --text-muted: rgba(255,255,255,0.6);
+    --bg-primary: rgba(255,255,255,0.1);
+    --bg-secondary: rgba(255,255,255,0.05);
+    --border-color: rgba(255,255,255,0.2);
+    --shadow-light: 0 4px 6px rgba(0,0,0,0.1);
+    --shadow-medium: 0 10px 25px rgba(0,0,0,0.15);
+    --shadow-heavy: 0 20px 40px rgba(0,0,0,0.3);
+    --border-radius: 20px;
+    --border-radius-small: 12px;
+    --transition: all 0.3s ease;
+}
+
+/* Основные стили */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Inter, 'Helvetica Neue', Arial, sans-serif;
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    color: var(--text-primary);
+    line-height: 1.6;
+    min-height: 100vh;
+}
+
+.container {
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Заголовки */
+.header {
+    text-align: center;
+    margin-bottom: 32px;
+    padding: 24px 0;
+}
+
+.header h1 {
+    font-size: 32px;
+    font-weight: 800;
+    margin-bottom: 12px;
+    color: var(--text-primary);
+}
+
+.header p {
+    color: var(--text-secondary);
+    font-size: 18px;
+    font-weight: 500;
+}
+
+/* Карточки спортивных групп */
+.sport-groups {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 24px;
+    margin-bottom: 32px;
+}
+
+.sport-group-card {
+    background: var(--bg-primary);
+    border-radius: var(--border-radius);
+    padding: 24px;
+    transition: var(--transition);
+    border: 1px solid var(--border-color);
+    backdrop-filter: blur(10px);
+    cursor: pointer;
+}
+
+.sport-group-card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-heavy);
+    background: rgba(255,255,255,0.15);
+}
+
+.sport-group-card h3 {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: var(--text-primary);
+}
+
+.sport-group-card p {
+    font-size: 16px;
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+    line-height: 1.5;
+}
+
+.prices {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+
+.price-tag {
+    background: rgba(255,255,255,0.2);
+    color: var(--text-primary);
+    padding: 8px 16px;
+    border-radius: 25px;
+    font-size: 14px;
+    font-weight: 600;
+    border: 1px solid rgba(255,255,255,0.3);
+}
+
+.trainer-info {
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius-small);
+    padding: 16px;
+    margin-top: 16px;
+}
+
+.trainer-name {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+}
+
+.trainer-description {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.4;
+}
+
+/* Панели пользователей */
+.user-panel {
+    background: var(--bg-primary);
+    border-radius: var(--border-radius);
+    padding: 24px;
+    margin-bottom: 24px;
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border-color);
+}
+
+.user-panel h2 {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    color: var(--text-primary);
+    text-align: center;
+}
+
+.panel-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+}
+
+.panel-btn {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    color: var(--text-primary);
+    border: none;
+    padding: 16px 20px;
+    border-radius: var(--border-radius-small);
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    text-align: center;
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.panel-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-medium);
+}
+
+.panel-btn.secondary {
+    background: rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.3);
+}
+
+.panel-btn.secondary:hover {
+    background: rgba(255,255,255,0.3);
+}
+
+/* Модальные окна */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.8);
+    backdrop-filter: blur(5px);
+}
+
+.modal-content {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    margin: 5% auto;
+    padding: 0;
+    border-radius: var(--border-radius);
+    width: 90%;
+    max-width: 500px;
+    max-height: 80vh;
+    overflow-y: auto;
+    position: relative;
+    border: 1px solid var(--border-color);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 24px 16px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.modal-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 28px;
+    cursor: pointer;
+    color: var(--text-secondary);
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: var(--transition);
+}
+
+.close-btn:hover {
+    background: rgba(255,255,255,0.2);
+    color: var(--text-primary);
+}
+
+.modal-body {
+    padding: 24px;
+}
+
+/* Формы */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 16px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 14px 16px;
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: var(--border-radius-small);
+    font-size: 16px;
+    background: rgba(255,255,255,0.1);
+    color: var(--text-primary);
+    outline: none;
+    transition: var(--transition);
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    border-color: rgba(255,255,255,0.6);
+    background: rgba(255,255,255,0.15);
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+    color: var(--text-muted);
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+/* Кнопки */
+.btn {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    color: var(--text-primary);
+    border: none;
+    padding: 14px 28px;
+    border-radius: var(--border-radius-small);
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    width: 100%;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-medium);
+}
+
+/* Таблицы */
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius-small);
+    overflow: hidden;
+}
+
+.data-table th,
+.data-table td {
+    padding: 16px;
+    text-align: left;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.data-table th {
+    background: var(--bg-primary);
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 16px;
+}
+
+.data-table td {
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+.data-table tr:hover {
+    background: rgba(255,255,255,0.05);
+}
+
+/* Статусы */
+.status-badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.status-pending {
+    background: rgba(245, 158, 11, 0.2);
+    color: var(--warning-color);
+    border: 1px solid rgba(245, 158, 11, 0.4);
+}
+
+.status-approved {
+    background: rgba(16, 185, 129, 0.2);
+    color: var(--success-color);
+    border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+.status-rejected {
+    background: rgba(239, 68, 68, 0.2);
+    color: var(--danger-color);
+    border: 1px solid rgba(239, 68, 68, 0.4);
+}
+
+.balance-low {
+    background: rgba(239, 68, 68, 0.2);
+    color: var(--danger-color);
+    border: 1px solid rgba(239, 68, 68, 0.4);
+}
+
+.balance-medium {
+    background: rgba(245, 158, 11, 0.2);
+    color: var(--warning-color);
+    border: 1px solid rgba(245, 158, 11, 0.4);
+}
+
+.balance-high {
+    background: rgba(16, 185, 129, 0.2);
+    color: var(--success-color);
+    border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+/* Утилиты */
+.loading {
+    text-align: center;
+    padding: 40px;
+    color: var(--text-secondary);
+    font-size: 18px;
+}
+
+.error {
+    background: rgba(239, 68, 68, 0.2);
+    color: var(--text-primary);
+    padding: 16px;
+    border-radius: var(--border-radius-small);
+    margin-bottom: 16px;
+    border: 1px solid rgba(239, 68, 68, 0.4);
+}
+
+.success {
+    background: rgba(16, 185, 129, 0.2);
+    color: var(--text-primary);
+    padding: 16px;
+    border-radius: var(--border-radius-small);
+    margin-bottom: 16px;
+    border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+.no-data {
+    text-align: center;
+    padding: 40px;
+    color: var(--text-muted);
+    font-size: 16px;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .container {
+        padding: 16px;
+    }
+    
+    .header h1 {
+        font-size: 28px;
+    }
+    
+    .header p {
+        font-size: 16px;
+    }
+    
+    .sport-groups {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .panel-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .modal-content {
+        width: 95%;
+        margin: 10% auto;
+    }
+    
+    .data-table {
+        font-size: 12px;
+    }
+    
+    .data-table th,
+    .data-table td {
+        padding: 12px 8px;
+    }
+}
+
+@media (max-width: 480px) {
+    .header h1 {
+        font-size: 24px;
+    }
+    
+    .sport-group-card {
+        padding: 20px;
+    }
+    
+    .prices {
+        flex-direction: column;
+    }
+    
+    .price-tag {
+        text-align: center;
+    }
+    
+    .panel-btn {
+        padding: 16px;
+        min-height: 60px;
+    }
+}
+
+/* Анимации */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.5s ease-out;
+}
+
+/* Специальные стили для администраторов */
+.admin-nav {
+    background: var(--bg-primary);
+    border-radius: var(--border-radius);
+    padding: 24px;
+    margin-bottom: 32px;
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border-color);
+}
+
+.nav-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+}
+
+.nav-btn {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    color: var(--text-primary);
+    border: none;
+    padding: 20px;
+    border-radius: 16px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    text-align: center;
+    min-height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.nav-btn:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-heavy);
+}
+
+/* Статистика */
+.stats-section {
+    background: var(--bg-primary);
+    border-radius: var(--border-radius);
+    padding: 24px;
+    margin-bottom: 32px;
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border-color);
+}
+
+.stats-section h2 {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 24px;
+    color: var(--text-primary);
+    text-align: center;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.stat-card {
+    background: var(--bg-primary);
+    border-radius: 16px;
+    padding: 24px;
+    text-align: center;
+    border: 1px solid var(--border-color);
+    transition: var(--transition);
+}
+
+.stat-card:hover {
+    transform: translateY(-4px);
+    background: rgba(255,255,255,0.15);
+}
+
+.stat-number {
+    font-size: 36px;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+}
+
+.stat-label {
+    font-size: 16px;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+/* Секции таблиц */
+.table-section {
+    background: var(--bg-primary);
+    border-radius: var(--border-radius);
+    padding: 24px;
+    margin-bottom: 32px;
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border-color);
+}
+
+.table-section h2 {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 24px;
+    color: var(--text-primary);
+} 
+
+/* Информация о группах */
+.group-info {
+    color: var(--text-primary);
+}
+
+.group-info h4 {
+    margin: 16px 0 8px 0;
+    color: var(--text-primary);
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.group-info p {
+    margin-bottom: 12px;
+    line-height: 1.5;
+}
+
+.group-info .prices {
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius-small);
+    padding: 16px;
+    margin: 16px 0;
+}
+
+.group-info .prices h4 {
+    margin: 0 0 12px 0;
+    color: var(--text-primary);
+}
+
+.group-info .prices div {
+    margin-bottom: 8px;
+    color: var(--text-secondary);
+}
+
+.group-actions {
+    margin-top: 24px;
+    display: flex;
+    gap: 12px;
+    flex-direction: column;
+}
+
+.group-actions .btn {
+    margin-bottom: 0;
+}
+
+.group-actions .btn.secondary {
+    background: rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.3);
+}
+
+.group-actions .btn.secondary:hover {
+    background: rgba(255,255,255,0.3);
+}
+
+/* Действия с группами */
+.group-actions-admin {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+.group-actions-admin .btn {
+    margin-bottom: 8px;
+    font-size: 14px;
+    padding: 10px 16px;
+} 
+
+/* Стили для расписания групп */
+.schedule-days {
+    margin-bottom: 24px;
+}
+
+.schedule-days h4 {
+    margin-bottom: 16px;
+    color: var(--text-primary);
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.days-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+}
+
+.day-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px;
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius-small);
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.day-checkbox:hover {
+    background: rgba(255,255,255,0.1);
+}
+
+.day-checkbox input[type="checkbox"] {
+    width: auto;
+    margin: 0;
+}
+
+.day-checkbox span {
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.schedule-time {
+    margin-bottom: 24px;
+}
+
+.schedule-time h4 {
+    margin-bottom: 16px;
+    color: var(--text-primary);
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.time-inputs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.time-inputs .form-group {
+    margin-bottom: 0;
+}
+
+.current-schedule h4 {
+    margin-bottom: 16px;
+    color: var(--text-primary);
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.schedule-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px;
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius-small);
+    margin-bottom: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.schedule-day {
+    font-weight: 600;
+    color: var(--text-primary);
+    flex: 1;
+}
+
+.schedule-time {
+    color: var(--text-secondary);
+    margin: 0 16px;
+}
+
+.btn-small {
+    padding: 6px 12px;
+    font-size: 12px;
+    min-height: auto;
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, var(--danger-color) 0%, #dc2626 100%);
+}
+
+.btn-danger:hover {
+    background: linear-gradient(135deg, #dc2626 0%, var(--danger-color) 100%);
+}
+
+/* Адаптивность для расписания */
+@media (max-width: 768px) {
+    .days-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .time-inputs {
+        grid-template-columns: 1fr;
+    }
+    
+    .schedule-item {
+        flex-direction: column;
+        gap: 8px;
+        text-align: center;
+    }
+    
+    .schedule-time {
+        margin: 0;
+    }
+} 
+
+/* Стили для группировки спортивных групп */
+.sport-category {
+    margin-bottom: 40px;
+}
+
+.category-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 24px;
+    text-align: center;
+    position: relative;
+    padding-bottom: 16px;
+}
+
+.category-title::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 3px;
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    border-radius: 2px;
+}
+
+.category-groups {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 24px;
+}
+
+.age-group {
+    font-size: 14px;
+    color: var(--text-secondary);
+    font-weight: 500;
+    margin: 8px 0;
+    padding: 4px 12px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    display: inline-block;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Адаптивность для категорий */
+@media (max-width: 768px) {
+    .category-title {
+        font-size: 24px;
+        margin-bottom: 20px;
+    }
+    
+    .category-groups {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .sport-group-card {
+        margin: 0 10px;
+    }
+} 
+
+/* Улучшаем контраст блока расписания */
+.schedule-info {
+    background: rgba(139, 92, 246, 0.15);
+    border-color: rgba(139, 92, 246, 0.35);
+}
+
+.schedule-info strong {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.schedule-info strong::before {
+    content: '📅 ';
+    margin-right: 4px;
+} 
+
+/* Карточки направлений */
+.direction-card .group-content h3 {
+    font-size: 22px;
+    margin-bottom: 8px;
+}
+.direction-card .group-content p {
+    color: var(--text-secondary);
+}
+
+/* Заголовок Расписание белый */
+.schedule-info strong {
+    color: var(--text-primary);
+}
+
+/* Заголовок категории и кнопка назад */
+.category-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 12px 0 20px;
+}
+.category-header .category-title {
+    margin: 0;
+} 

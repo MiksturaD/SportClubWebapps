@@ -3,833 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Спортивный клуб</title>
+    <title>Спортивный клуб Тайику</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Inter, 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(180deg, rgba(17,24,39,1) 0%, rgba(31,41,55,1) 100%);
-            color: #e5e7eb;
-            line-height: 1.6;
-        }
-
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 24px;
-            padding: 16px 0 8px;
-        }
-
-        .header h1 {
-            font-size: 26px;
-            font-weight: 800;
-            letter-spacing: 0.4px;
-            margin-bottom: 6px;
-            color: #ffffff;
-        }
-
-        .header p {
-            color: #9ca3af;
-            font-size: 14px;
-        }
-
-        .sport-groups {
-            display: grid;
-            gap: 14px;
-            margin-bottom: 24px;
-        }
-
-        .sport-group-card {
-            background: rgba(255,255,255,0.04);
-            border-radius: 14px;
-            padding: 16px 16px 14px;
-            transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
-            border: 1px solid rgba(255,255,255,0.08);
-            backdrop-filter: blur(6px);
-        }
-
-        .sport-group-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 24px rgba(0,0,0,0.28);
-            background: rgba(255,255,255,0.06);
-        }
-        
-        .group-content {
-            cursor: pointer;
-        }
-        
-        .group-actions {
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px solid rgba(255,255,255,0.1);
-        }
-
-        .sport-group-card h3 {
-            font-size: 17px;
-            font-weight: 700;
-            margin-bottom: 6px;
-            color: #ffffff;
-        }
-
-        .sport-group-card p {
-            font-size: 13px;
-            color: #9ca3af;
-            margin-bottom: 0px;
-        }
-
-        .prices {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .price-tag {
-            background: var(--tg-theme-button-color, #007bff);
-            color: var(--tg-theme-button-text-color, #ffffff);
-            padding: 4px 8px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 500;
-        }
-
-        .admin-panel {
-            background: rgba(255,255,255,0.03);
-            border-radius: 14px;
-            padding: 16px;
-            margin-bottom: 16px;
-            border: 1px solid rgba(255,255,255,0.08);
-        }
-
-        .admin-panel h2 {
-            font-size: 18px;
-            margin-bottom: 10px;
-            color: #e5e7eb;
-            font-weight: 700;
-        }
-
-        .admin-buttons {
-            display: grid;
-            gap: 10px;
-        }
-
-        .btn {
-            background: linear-gradient(90deg, #2563eb 0%, #7c3aed 100%);
-            color: #ffffff;
-            border: none;
-            padding: 12px 16px;
-            border-radius: 10px;
-            font-size: 15px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: transform .15s ease, box-shadow .15s ease, opacity .15s ease;
-            text-align: center;
-            text-decoration: none;
-            display: inline-block;
-            box-shadow: 0 6px 16px rgba(37,99,235,0.35);
-        }
-
-        .btn:hover {
-            opacity: 0.95;
-            transform: translateY(-1px);
-            box-shadow: 0 10px 22px rgba(124,58,237,0.35);
-        }
-
-        .btn-secondary {
-            background: rgba(255,255,255,0.06);
-            color: #e5e7eb;
-            border: 1px solid rgba(255,255,255,0.12);
-            box-shadow: none;
-        }
-
-        .parent-panel {
-            background: rgba(255,255,255,0.03);
-            border-radius: 14px;
-            padding: 16px;
-            border: 1px solid rgba(255,255,255,0.08);
-        }
-
-        .parent-panel h2 {
-            font-size: 18px;
-            margin-bottom: 10px;
-            color: #e5e7eb;
-            font-weight: 700;
-        }
-
-        .parent-buttons {
-            display: grid;
-            gap: 10px;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 1000;
-        }
-
-        .modal-content {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: #0b1220;
-            border-radius: 16px;
-            padding: 18px;
-            width: 90%;
-            max-width: 520px;
-            max-height: 80vh;
-            overflow-y: auto;
-            border: 1px solid rgba(255,255,255,0.08);
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-            color: #e5e7eb;
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 14px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid rgba(255,255,255,0.08);
-        }
-
-        .modal-title {
-            font-size: 18px;
-            font-weight: 800;
-            color: #ffffff;
-            letter-spacing: 0.3px;
-        }
-
-        .close-btn {
-            background: none;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            color: #9ca3af;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 500;
-            color: var(--tg-theme-text-color, #000000);
-        }
-
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-            width: 100%;
-            padding: 11px 12px;
-            border: 1px solid rgba(255,255,255,0.12);
-            border-radius: 10px;
-            font-size: 15px;
-            background: rgba(255,255,255,0.04);
-            color: #e5e7eb;
-            outline: none;
-        }
-
-        .form-group textarea {
-            resize: vertical;
-            min-height: 80px;
-        }
-
-        .schedule-item {
-            background: rgba(255,255,255,0.04);
-            border-radius: 10px;
-            padding: 12px;
-            margin-bottom: 10px;
-            border: 1px solid rgba(255,255,255,0.08);
-        }
-
-        .schedule-day {
-            font-weight: 700;
-            margin-bottom: 4px;
-            color: #ffffff;
-        }
-
-        .schedule-time {
-            color: #9ca3af;
-            font-size: 13px;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 20px;
-            color: #9ca3af;
-        }
-
-        .error {
-            background: #ef4444;
-            color: white;
-            padding: 12px;
-            border-radius: 10px;
-            margin-bottom: 12px;
-        }
-
-        .success {
-            background: #10b981;
-            color: white;
-            padding: 12px;
-            border-radius: 10px;
-            margin-bottom: 12px;
-        }
-
-        /* Стили для посещаемости */
-        .attendance-group {
-            background: rgba(255,255,255,0.04);
-            border-radius: 10px;
-            padding: 12px;
-            margin-bottom: 10px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            border: 1px solid rgba(255,255,255,0.08);
-        }
-
-        .attendance-group:hover {
-            background: rgba(255,255,255,0.06);
-            transform: translateY(-1px);
-        }
-
-        .attendance-date {
-            background: rgba(255,255,255,0.04);
-            border-radius: 8px;
-            padding: 10px;
-            margin-bottom: 8px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            border: 1px solid rgba(255,255,255,0.08);
-        }
-
-        .attendance-date:hover {
-            background: rgba(255,255,255,0.06);
-        }
-
-        .attendance-date.completed {
-            border-color: #10b981;
-            background: rgba(16, 185, 129, 0.1);
-        }
-
-        .attendance-date.pending {
-            border-color: #f59e0b;
-            background: rgba(245, 158, 11, 0.1);
-        }
-
-        .participant-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 12px;
-            background: rgba(255,255,255,0.04);
-            border-radius: 8px;
-            margin-bottom: 8px;
-            border: 1px solid rgba(255,255,255,0.08);
-        }
-
-        .participant-info {
-            flex: 1;
-        }
-        
-        /* Стили для платежей */
-        .payment-item {
-            border-left: 4px solid #6b7280;
-        }
-        
-        .payment-item.pending {
-            border-left-color: #f59e0b;
-        }
-        
-        .payment-item.approved {
-            border-left-color: #10b981;
-        }
-        
-        .payment-item.rejected {
-            border-left-color: #ef4444;
-        }
-        
-        .payment-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-        
-        .payment-participant {
-            font-weight: bold;
-            color: #ffffff;
-        }
-        
-        .payment-status {
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: bold;
-        }
-        
-        .payment-status.pending {
-            background: #f59e0b;
-            color: #000000;
-        }
-        
-        .payment-status.approved {
-            background: #10b981;
-            color: #ffffff;
-        }
-        
-        .payment-status.rejected {
-            background: #ef4444;
-            color: #ffffff;
-        }
-        
-        .payment-details {
-            margin-bottom: 8px;
-        }
-        
-        .payment-details div {
-            margin-bottom: 4px;
-            color: #d1d5db;
-        }
-        
-        .payment-actions {
-            display: flex;
-            gap: 8px;
-        }
-        
-        .btn-success {
-            background: #10b981;
-            color: white;
-        }
-        
-        .btn-danger {
-            background: #ef4444;
-            color: white;
-        }
-        
-        /* Стили для учеников */
-        .student-item {
-            background: rgba(255,255,255,0.04);
-            border-radius: 10px;
-            padding: 16px;
-            margin-bottom: 16px;
-            border: 1px solid rgba(255,255,255,0.08);
-        }
-        
-        .student-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-            padding-bottom: 8px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
-        
-        .student-name {
-            font-weight: bold;
-            font-size: 16px;
-            color: #ffffff;
-        }
-        
-        .student-phone {
-            color: #9ca3af;
-            font-size: 14px;
-        }
-        
-        .student-info {
-            margin-bottom: 12px;
-        }
-        
-        .student-info div {
-            margin-bottom: 4px;
-            color: #d1d5db;
-            font-size: 14px;
-        }
-        
-        .student-financial {
-            background: rgba(255,255,255,0.02);
-            border-radius: 8px;
-            padding: 12px;
-        }
-        
-        .financial-summary {
-            display: flex;
-            gap: 16px;
-            margin-bottom: 12px;
-            flex-wrap: wrap;
-        }
-        
-        .financial-summary span {
-            color: #ffffff;
-            font-weight: 500;
-        }
-        
-        .subscriptions-list {
-            border-top: 1px solid rgba(255,255,255,0.1);
-            padding-top: 12px;
-        }
-        
-        .subscriptions-list h5 {
-            color: #ffffff;
-            margin-bottom: 8px;
-            font-size: 14px;
-        }
-        
-        .subscription-item {
-            background: rgba(255,255,255,0.02);
-            border-radius: 6px;
-            padding: 8px;
-            margin-bottom: 8px;
-            border-left: 3px solid #3b82f6;
-        }
-        
-        .subscription-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 4px;
-        }
-        
-        .btn-small {
-            padding: 4px 8px;
-            font-size: 12px;
-            min-width: auto;
-        }
-        
-        .subscription-item div {
-            margin-bottom: 4px;
-            color: #d1d5db;
-            font-size: 13px;
-        }
-        
-        .no-subscriptions {
-            color: #9ca3af;
-            font-style: italic;
-            text-align: center;
-            padding: 12px;
-        }
-        
-        /* Стили для статистики */
-        .statistics-summary {
-            background: rgba(255,255,255,0.04);
-            border-radius: 10px;
-            padding: 16px;
-            margin-bottom: 20px;
-            border: 1px solid rgba(255,255,255,0.08);
-        }
-        
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 16px;
-            margin-top: 12px;
-        }
-        
-        .stat-item {
-            text-align: center;
-            padding: 12px;
-            background: rgba(255,255,255,0.02);
-            border-radius: 8px;
-            border: 1px solid rgba(255,255,255,0.05);
-        }
-        
-        .stat-number {
-            font-size: 24px;
-            font-weight: bold;
-            color: #ffffff;
-            margin-bottom: 4px;
-        }
-        
-        .stat-label {
-            font-size: 12px;
-            color: #9ca3af;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        /* Стили для статистики группы */
-        .group-statistics {
-            background: rgba(255,255,255,0.04);
-            border-radius: 10px;
-            padding: 16px;
-            margin-bottom: 20px;
-            border: 1px solid rgba(255,255,255,0.08);
-        }
-        
-        .group-statistics h4 {
-            color: #ffffff;
-            margin-bottom: 12px;
-        }
-        }
-
-        .participant-name {
-            font-weight: 600;
-            color: #ffffff;
-            margin-bottom: 4px;
-        }
-
-        .participant-phone {
-            font-size: 12px;
-            color: #9ca3af;
-        }
-
-        .attendance-toggle {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .attendance-controls {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-        }
-        
-        .reason-select {
-            background: rgba(255,255,255,0.1);
-            border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 6px;
-            padding: 4px 8px;
-            color: #ffffff;
-            font-size: 12px;
-            min-width: 120px;
-        }
-        
-        .reason-select:focus {
-            outline: none;
-            border-color: #3b82f6;
-        }
-
-        .toggle-switch {
-            position: relative;
-            width: 44px;
-            height: 24px;
-            background: rgba(255,255,255,0.2);
-            border-radius: 12px;
-            cursor: pointer;
-            transition: background 0.3s ease;
-        }
-
-        .toggle-switch.active {
-            background: var(--tg-theme-button-color, #007bff);
-        }
-
-        .toggle-switch::after {
-            content: '';
-            position: absolute;
-            top: 2px;
-            left: 2px;
-            width: 20px;
-            height: 20px;
-            background: white;
-            border-radius: 50%;
-            transition: transform 0.3s ease;
-        }
-
-        .toggle-switch.active::after {
-            transform: translateX(20px);
-        }
-
-        .attendance-status {
-            font-size: 12px;
-            font-weight: 500;
-        }
-
-        .attendance-status.present {
-            color: #10b981;
-        }
-
-        .attendance-status.absent {
-            color: #ef4444;
-        }
-
-        .stats-item {
-            background: rgba(255,255,255,0.04);
-            border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 8px;
-            border: 1px solid rgba(255,255,255,0.08);
-        }
-
-        .stats-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-
-        .stats-date {
-            font-weight: 600;
-            color: #ffffff;
-        }
-
-        .stats-percentage {
-            font-size: 14px;
-            font-weight: 600;
-        }
-
-        .stats-percentage.high {
-            color: #10b981;
-        }
-
-        .stats-percentage.medium {
-            color: #f59e0b;
-        }
-
-        .stats-percentage.low {
-            color: #ef4444;
-        }
-
-        .stats-details {
-            display: flex;
-            gap: 12px;
-            font-size: 12px;
-            color: #9ca3af;
-        }
-
-        .back-btn {
-            background: rgba(255,255,255,0.1);
-            border: none;
-            color: #e5e7eb;
-            padding: 8px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-            margin-bottom: 12px;
-        }
-
-        .back-btn:hover {
-            background: rgba(255,255,255,0.15);
-        }
-
-        /* Стили для авторизации */
-        .authorized-participant {
-            background: rgba(16, 185, 129, 0.1);
-            border: 1px solid #10b981;
-            border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 8px;
-        }
-
-        .authorized-participant h5 {
-            color: #10b981;
-            margin-bottom: 4px;
-            font-weight: 600;
-        }
-
-        .authorized-participant p {
-            color: #9ca3af;
-            font-size: 12px;
-            margin: 0;
-        }
-
-        .auth-code-input {
-            text-align: center;
-            font-size: 18px;
-            font-weight: 600;
-            letter-spacing: 2px;
-        }
-
-        /* Стили для финансовой информации */
-        .financial-info {
-            background: rgba(255,255,255,0.04);
-            border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 8px;
-            border: 1px solid rgba(255,255,255,0.08);
-        }
-
-        .financial-info.low-balance {
-            border-color: #ef4444;
-            background: rgba(239, 68, 68, 0.1);
-        }
-
-        .financial-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-
-        .participant-name {
-            font-weight: 600;
-            color: #ffffff;
-        }
-
-        .balance-info {
-            display: flex;
-            gap: 12px;
-            font-size: 12px;
-            color: #9ca3af;
-        }
-
-        .balance-remaining {
-            font-weight: 600;
-        }
-
-        .balance-remaining.low {
-            color: #ef4444;
-        }
-
-        .balance-remaining.medium {
-            color: #f59e0b;
-        }
-
-        .balance-remaining.high {
-            color: #10b981;
-        }
-
-        .check-balance-btn {
-            background: #ef4444;
-            color: white;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 12px;
-            margin-top: 8px;
-        }
-
-        .check-balance-btn:hover {
-            background: #dc2626;
-        }
-
-        @media (max-width: 480px) {
-            .container {
-                padding: 15px;
-            }
-            
-            .sport-group-card {
-                padding: 15px;
-            }
-            
-            .prices {
-                flex-direction: column;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>🏋️ Спортивный клуб Тайику</h1>
-            <p>Выберите группу для просмотра информации</p>
+            <h1>Спортивный клуб Тайику</h1>
+            <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Логотип клуба" style="max-width: 100px; margin-bottom: 10px;">
+            <p>Развитие спортивных навыков и здорового образа жизни</p>
         </div>
 
         <!-- Спортивные группы -->
@@ -838,35 +21,57 @@
         </div>
 
         <!-- Административная панель -->
-        <div class="admin-panel" id="adminPanel" style="display: none;">
+        <div class="user-panel" id="adminPanel" style="display: none;">
             <h2>👨‍💼 Административная панель</h2>
-            <div class="admin-buttons">
-                <button class="btn" onclick="showModal('participantsModal')">📝 Регистрация участников</button>
-                <button class="btn" onclick="showModal('scheduleModal')">📅 Расписание тренировок</button>
-                <button class="btn" onclick="showModal('paymentsModal')">💰 Система учета оплаты</button>
-                <button class="btn" onclick="showModal('studentsModal')">👥 Ученики</button>
-                <button class="btn" onclick="showModal('discountsModal')">🎫 Скидки и акции</button>
-                <button class="btn" onclick="showModal('attendanceModal')">📊 Посещаемость</button>
-                <button class="btn" onclick="checkLowBalance()">💰 Проверить балансы</button>
+            <div class="panel-grid">
+                <button class="panel-btn" onclick="showModal('participantsModal')">
+                    👥 Участники
+                </button>
+                <button class="panel-btn" onclick="showModal('paymentsModal')">
+                    💰 Платежи
+                </button>
+                <button class="panel-btn" onclick="showModal('attendanceModal')">
+                    📊 Посещаемость
+                </button>
+                <button class="panel-btn" onclick="showModal('discountsModal')">
+                    🎫 Акции
+                </button>
+                <button class="panel-btn" onclick="checkLowBalance()">
+                    ⚠️ Балансы
+                </button>
+                <button class="panel-btn secondary" onclick="updateSportGroups()">
+                    🔄 Обновить группы
+                </button>
+                <button class="panel-btn secondary" onclick="resetSportGroups()">
+                    🗑️ Сбросить группы
+                </button>
             </div>
         </div>
 
         <!-- Панель для родителей -->
-        <div class="parent-panel" id="parentPanel" style="display: none;">
-            <h2>👨‍👩‍👧‍👦 Панель родителя</h2>
-            <div class="parent-buttons">
-                <button class="btn btn-secondary" onclick="showModal('contactModal')">📞 Связаться с администрацией</button>
-                <button class="btn" onclick="showModal('authorizationModal')">🔐 Авторизация</button>
-                <button class="btn" onclick="showModal('paymentModal')" id="paymentBtn" style="display: none;">💳 Оплатить</button>
-                <button class="btn" onclick="showModal('discountsModal')">🎫 Скидки и акции</button>
-                <button class="btn btn-secondary" onclick="showModal('transferModal')" id="transferBtn" style="display: none;">🔄 Перенос занятия</button>
-                <button class="btn" onclick="showModal('parentAttendanceModal')" id="attendanceBtn" style="display: none;">📊 Посещаемость</button>
+        <div class="user-panel" id="parentPanel" style="display: none;">
+            <h2>👤 Личный кабинет</h2>
+            <div class="panel-grid">
+                <button class="panel-btn" onclick="showModal('authorizationModal')">
+                    🔐 Абонементы
+                </button>
+                <button class="panel-btn" onclick="showModal('paymentModal')" id="paymentBtn" style="display: none;">
+                    💳 Оплата
+                </button>
+                <button class="panel-btn" onclick="showModal('parentAttendanceModal')" id="attendanceBtn" style="display: none;">
+                    📊 Посещаемость
+                </button>
+                <button class="panel-btn secondary" onclick="openContacts()">
+                    📞 Контакты
+                </button>
+                <button class="panel-btn secondary" onclick="showModal('discountsModal')">
+                    🎫 Акции
+                </button>
             </div>
         </div>
     </div>
 
     <!-- Модальные окна -->
-
     <!-- Модальное окно регистрации участников -->
     <div class="modal" id="participantsModal">
         <div class="modal-content">
@@ -874,48 +79,50 @@
                 <h3 class="modal-title">Регистрация участников</h3>
                 <button class="close-btn" onclick="closeModal('participantsModal')">&times;</button>
             </div>
-            <form id="participantForm">
-                <div class="form-group">
-                    <label for="fullName">ФИО участника</label>
-                    <input type="text" id="fullName" required>
-                </div>
-                <div class="form-group">
-                    <label for="parentPhone">Телефон родителя</label>
-                    <input type="tel" id="parentPhone" required>
-                </div>
-                <div class="form-group">
-                    <label for="birthDate">Дата рождения</label>
-                    <input type="date" id="birthDate" required>
-                </div>
-                <div class="form-group">
-                    <label for="participantGroup">Группа для регистрации</label>
-                    <select id="participantGroup" required>
-                        <option value="">Выберите группу</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>
-                        <input type="checkbox" id="medicalCertificate">
-                        Медицинская справка
-                    </label>
-                </div>
-                <div class="form-group">
-                    <label for="discountType">Тип скидки</label>
-                    <select id="discountType">
-                        <option value="">Без скидки</option>
-                        <option value="Семейная скидка">Семейная скидка</option>
-                        <option value="Многодетная семья">Многодетная семья</option>
-                        <option value="Студенческая скидка">Студенческая скидка</option>
-                        <option value="Скидка за реферала">Скидка за реферала</option>
-                        <option value="Сезонная скидка">Сезонная скидка</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="discountPercent">Процент скидки</label>
-                    <input type="number" id="discountPercent" min="0" max="100" value="0">
-                </div>
-                <button type="submit" class="btn">Зарегистрировать</button>
-            </form>
+            <div class="modal-body">
+                <form id="participantForm">
+                    <div class="form-group">
+                        <label for="fullName">ФИО участника</label>
+                        <input type="text" id="fullName" required placeholder="Введите полное имя">
+                    </div>
+                    <div class="form-group">
+                        <label for="parentPhone">Телефон родителя</label>
+                        <input type="tel" id="parentPhone" required placeholder="+7 (999) 123-45-67">
+                    </div>
+                    <div class="form-group">
+                        <label for="birthDate">Дата рождения</label>
+                        <input type="date" id="birthDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="participantGroup">Группа для регистрации</label>
+                        <select id="participantGroup" required>
+                            <option value="">Выберите группу</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="medicalCertificate" style="width: auto; margin-right: 8px;">
+                            Медицинская справка
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label for="discountType">Тип скидки</label>
+                        <select id="discountType">
+                            <option value="">Без скидки</option>
+                            <option value="Семейная скидка">Семейная скидка</option>
+                            <option value="Многодетная семья">Многодетная семья</option>
+                            <option value="Студенческая скидка">Студенческая скидка</option>
+                            <option value="Скидка за реферала">Скидка за реферала</option>
+                            <option value="Сезонная скидка">Сезонная скидка</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="discountPercent">Процент скидки</label>
+                        <input type="number" id="discountPercent" min="0" max="100" value="0" placeholder="0">
+                    </div>
+                    <button type="submit" class="btn">Зарегистрировать</button>
+                </form>
+            </div>
         </div>
     </div>
 
@@ -926,38 +133,40 @@
                 <h3 class="modal-title">Расписание тренировок</h3>
                 <button class="close-btn" onclick="closeModal('scheduleModal')">&times;</button>
             </div>
-            <form id="scheduleForm">
-                <div class="form-group">
-                    <label for="scheduleGroup">Вид тренировки</label>
-                    <select id="scheduleGroup" required>
-                        <option value="">Выберите группу</option>
-                    </select>
+            <div class="modal-body">
+                <form id="scheduleForm">
+                    <div class="form-group">
+                        <label for="scheduleGroup">Вид тренировки</label>
+                        <select id="scheduleGroup" required>
+                            <option value="">Выберите группу</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="dayOfWeek">День недели</label>
+                        <select id="dayOfWeek" required>
+                            <option value="0">Понедельник</option>
+                            <option value="1">Вторник</option>
+                            <option value="2">Среда</option>
+                            <option value="3">Четверг</option>
+                            <option value="4">Пятница</option>
+                            <option value="5">Суббота</option>
+                            <option value="6">Воскресенье</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="startTime">Время начала</label>
+                        <input type="time" id="startTime" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="endTime">Время окончания</label>
+                        <input type="time" id="endTime" required>
+                    </div>
+                    <button type="submit" class="btn">Добавить расписание</button>
+                </form>
+                <div id="scheduleList" style="margin-top: 24px;">
+                    <h4 style="margin-bottom: 16px; color: #ffffff;">Текущее расписание:</h4>
+                    <div class="loading">Загрузка расписания...</div>
                 </div>
-                <div class="form-group">
-                    <label for="dayOfWeek">День недели</label>
-                    <select id="dayOfWeek" required>
-                        <option value="0">Понедельник</option>
-                        <option value="1">Вторник</option>
-                        <option value="2">Среда</option>
-                        <option value="3">Четверг</option>
-                        <option value="4">Пятница</option>
-                        <option value="5">Суббота</option>
-                        <option value="6">Воскресенье</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="startTime">Время начала</label>
-                    <input type="time" id="startTime" required>
-                </div>
-                <div class="form-group">
-                    <label for="endTime">Время окончания</label>
-                    <input type="time" id="endTime" required>
-                </div>
-                <button type="submit" class="btn">Добавить расписание</button>
-            </form>
-            <div id="scheduleList" style="margin-top: 20px;">
-                <h4>Текущее расписание:</h4>
-                <div class="loading">Загрузка расписания...</div>
             </div>
         </div>
     </div>
@@ -969,21 +178,10 @@
                 <h3 class="modal-title">Система учета оплаты</h3>
                 <button class="close-btn" onclick="closeModal('paymentsModal')">&times;</button>
             </div>
-            <div id="paymentsList">
-                <div class="loading">Загрузка платежей...</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Модальное окно учеников -->
-    <div class="modal" id="studentsModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">👥 Ученики</h3>
-                <button class="close-btn" onclick="closeModal('studentsModal')">&times;</button>
-            </div>
-            <div id="studentsList">
-                <div class="loading">Загрузка учеников...</div>
+            <div class="modal-body">
+                <div id="paymentsList">
+                    <div class="loading">Загрузка платежей...</div>
+                </div>
             </div>
         </div>
     </div>
@@ -995,55 +193,49 @@
                 <h3 class="modal-title">Скидки и акции</h3>
                 <button class="close-btn" onclick="closeModal('discountsModal')">&times;</button>
             </div>
-            <form id="discountForm">
-                <div class="form-group">
-                    <label for="discountName">Название акции</label>
-                    <input type="text" id="discountName" required>
+            <div class="modal-body">
+                <form id="discountForm">
+                    <div class="form-group">
+                        <label for="discountName">Название акции</label>
+                        <input type="text" id="discountName" required placeholder="Введите название акции">
+                    </div>
+                    <div class="form-group">
+                        <label for="discountDescription">Описание</label>
+                        <textarea id="discountDescription" required placeholder="Опишите условия акции"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="discountTypeSelect">Тип скидки</label>
+                        <select id="discountTypeSelect" required>
+                            <option value="">Выберите тип</option>
+                            <option value="Семейная скидка">Семейная скидка</option>
+                            <option value="Многодетная семья">Многодетная семья</option>
+                            <option value="Студенческая скидка">Студенческая скидка</option>
+                            <option value="Скидка за реферала">Скидка за реферала</option>
+                            <option value="Сезонная скидка">Сезонная скидка</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="discountPercentInput">Процент скидки</label>
+                        <input type="number" id="discountPercentInput" min="0" max="100" required placeholder="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="discountStartDate">Дата начала</label>
+                        <input type="date" id="discountStartDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="discountEndDate">Дата окончания</label>
+                        <input type="date" id="discountEndDate" required>
+                    </div>
+                    <button type="submit" class="btn">Создать акцию</button>
+                </form>
+                <div id="discountsList" style="margin-top: 24px;">
+                    <h4 style="margin-bottom: 16px; color: #ffffff;">Активные акции:</h4>
+                    <div class="loading">Загрузка акций...</div>
                 </div>
-                <div class="form-group">
-                    <label for="discountDescription">Описание</label>
-                    <textarea id="discountDescription" required></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="discountTypeAdmin">Тип скидки</label>
-                    <select id="discountTypeAdmin" required>
-                        <option value="Семейная скидка">Семейная скидка</option>
-                        <option value="Многодетная семья">Многодетная семья</option>
-                        <option value="Студенческая скидка">Студенческая скидка</option>
-                        <option value="Скидка за реферала">Скидка за реферала</option>
-                        <option value="Сезонная скидка">Сезонная скидка</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="discountPercentAdmin">Процент скидки</label>
-                    <input type="number" id="discountPercentAdmin" min="0" max="100" required>
-                </div>
-                <div class="form-group">
-                    <label for="discountStartDate">Дата начала</label>
-                    <input type="date" id="discountStartDate">
-                </div>
-                <div class="form-group">
-                    <label for="discountEndDate">Дата окончания</label>
-                    <input type="date" id="discountEndDate">
-                </div>
-                <button type="submit" class="btn">Добавить скидку</button>
-            </form>
-            <div id="discountsList" style="margin-top: 20px;"></div>
-        </div>
-    </div>
-
-    <!-- Модальное окно связи -->
-    <div class="modal" id="contactModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">Связаться с администрацией</h3>
-                <button class="close-btn" onclick="closeModal('contactModal')">&times;</button>
-            </div>
-            <div id="contactInfo">
-                <div class="loading">Загрузка контактов...</div>
             </div>
         </div>
     </div>
+    
 
     <!-- Модальное окно оплаты -->
     <div class="modal" id="paymentModal">
@@ -1052,70 +244,36 @@
                 <h3 class="modal-title">Оплата занятий</h3>
                 <button class="close-btn" onclick="closeModal('paymentModal')">&times;</button>
             </div>
-            <div id="financialInfo" style="margin-bottom: 20px;">
-                <h4 style="margin-bottom: 12px; color: #ffffff;">Финансовая информация:</h4>
-                <div class="loading">Загрузка данных...</div>
+            <div class="modal-body">
+                <form id="paymentForm">
+                    <div class="form-group">
+                        <label for="paymentParticipant">Участник</label>
+                        <select id="paymentParticipant" required>
+                            <option value="">Выберите участника</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="paymentGroup">Группа</label>
+                        <select id="paymentGroup" required>
+                            <option value="">Выберите группу</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="paymentType">Тип абонемента</label>
+                        <select id="paymentType" required>
+                            <option value="">Выберите тип</option>
+                            <option value="8 занятий">8 занятий</option>
+                            <option value="12 занятий">12 занятий</option>
+                            <option value="Разовые занятия">Разовые занятия</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="paymentAmount">Сумма к оплате</label>
+                        <input type="number" id="paymentAmount" required placeholder="0" readonly>
+                    </div>
+                    <button type="submit" class="btn">Оплатить</button>
+                </form>
             </div>
-            <form id="paymentForm">
-                <div class="form-group">
-                    <label for="paymentParticipant">Участник</label>
-                    <select id="paymentParticipant" required>
-                        <option value="">Выберите участника</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="paymentGroup">Вид тренировки</label>
-                    <select id="paymentGroup" required>
-                        <option value="">Выберите группу</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="subscriptionType">Тип абонемента</label>
-                    <select id="subscriptionType" required>
-                        <option value="8 занятий">8 занятий</option>
-                        <option value="12 занятий">12 занятий</option>
-                        <option value="Разовые занятия">Разовые занятия</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="paymentAmount">Сумма к оплате</label>
-                    <input type="number" id="paymentAmount" readonly>
-                </div>
-                <div class="form-group">
-                    <label for="paymentMethod">Способ оплаты</label>
-                    <select id="paymentMethod" required>
-                        <option value="cash">Наличные</option>
-                        <option value="card">Банковская карта</option>
-                        <option value="transfer">Банковский перевод</option>
-                    </select>
-                </div>
-                <button type="submit" class="btn">Оплатить</button>
-            </form>
-        </div>
-    </div>
-
-    <!-- Модальное окно переноса -->
-    <div class="modal" id="transferModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">Перенос занятия</h3>
-                <button class="close-btn" onclick="closeModal('transferModal')">&times;</button>
-            </div>
-            <form id="transferForm">
-                <div class="form-group">
-                    <label for="originalDate">Исходная дата</label>
-                    <input type="date" id="originalDate" required>
-                </div>
-                <div class="form-group">
-                    <label for="newDate">Новая дата</label>
-                    <input type="date" id="newDate" required>
-                </div>
-                <div class="form-group">
-                    <label for="transferReason">Причина переноса</label>
-                    <textarea id="transferReason" required placeholder="Укажите причину переноса занятия"></textarea>
-                </div>
-                <button type="submit" class="btn">Запросить перенос</button>
-            </form>
         </div>
     </div>
 
@@ -1126,63 +284,26 @@
                 <h3 class="modal-title">📊 Учет посещаемости</h3>
                 <button class="close-btn" onclick="closeModal('attendanceModal')">&times;</button>
             </div>
-            <div id="attendanceContent">
-                <div class="loading">Загрузка групп...</div>
+            <div class="modal-body">
+                <div id="attendanceContent">
+                    <div class="loading">Загрузка групп...</div>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Модальное окно выбора даты посещаемости -->
-    <div class="modal" id="attendanceDateModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">Выберите дату занятия</h3>
-                <button class="close-btn" onclick="closeModal('attendanceDateModal')">&times;</button>
-            </div>
-            <div id="attendanceDatesList">
-                <div class="loading">Загрузка дат...</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Модальное окно учета посещаемости -->
-    <div class="modal" id="attendanceRecordModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">Учет посещаемости</h3>
-                <button class="close-btn" onclick="closeModal('attendanceRecordModal')">&times;</button>
-            </div>
-            <div id="attendanceRecordContent">
-                <div class="loading">Загрузка участников...</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Модальное окно статистики посещаемости -->
-    <div class="modal" id="attendanceStatsModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">Статистика посещаемости</h3>
-                <button class="close-btn" onclick="closeModal('attendanceStatsModal')">&times;</button>
-            </div>
-            <div id="attendanceStatsContent">
-                <div class="loading">Загрузка статистики...</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Модальное окно авторизации -->
+    <!-- Модальное окно абонементов (родитель) -->
     <div class="modal" id="authorizationModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 class="modal-title">🔐 Авторизация</h3>
+                <h3 class="modal-title">🔐 Абонементы</h3>
                 <button class="close-btn" onclick="closeModal('authorizationModal')">&times;</button>
             </div>
-            <div id="authorizationContent">
-                <div style="margin-bottom: 16px;">
-                    <h4 style="margin-bottom: 8px; color: #ffffff;">Введите код авторизации</h4>
-                    <p style="color: #9ca3af; font-size: 13px; margin-bottom: 12px;">
-                        Получите 6-значный код у администратора для доступа к управлению участником
+            <div class="modal-body">
+                <div style="margin-bottom: 20px;">
+                    <h4 style="margin-bottom: 12px; color: #ffffff;">Добавить абонемент</h4>
+                    <p style="color: rgba(255,255,255,0.8); font-size: 14px; margin-bottom: 16px;">
+                        Введите 6-значный код, полученный у администратора
                     </p>
                 </div>
                 <form id="authorizationForm">
@@ -1190,10 +311,10 @@
                         <label for="authCode">Код авторизации</label>
                         <input type="text" id="authCode" maxlength="6" placeholder="123456" required>
                     </div>
-                    <button type="submit" class="btn">🔐 Авторизоваться</button>
+                    <button type="submit" class="btn">➕ Добавить абонемент</button>
                 </form>
-                <div id="authorizedParticipants" style="margin-top: 20px;">
-                    <h4 style="margin-bottom: 8px; color: #ffffff;">Ваши авторизованные участники:</h4>
+                <div id="authorizedParticipants" style="margin-top: 24px;">
+                    <h4 style="margin-bottom: 12px; color: #ffffff;">Текущие абонементы:</h4>
                     <div class="loading">Загрузка...</div>
                 </div>
             </div>
@@ -1204,15 +325,17 @@
     <div class="modal" id="parentAttendanceModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 class="modal-title">📊 Посещаемость моих детей</h3>
+                <h3 class="modal-title">📊 Посещаемость</h3>
                 <button class="close-btn" onclick="closeModal('parentAttendanceModal')">&times;</button>
             </div>
-            <div id="parentAttendanceContent">
-                <div class="loading">Загрузка данных...</div>
+            <div class="modal-body">
+                <div id="parentAttendanceContent">
+                    <div class="loading">Загрузка данных...</div>
+                </div>
             </div>
         </div>
     </div>
 
-    <script src="static/js/app.js"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>
 </html>

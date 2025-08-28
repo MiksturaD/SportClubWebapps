@@ -12,33 +12,47 @@ document.addEventListener('DOMContentLoaded', function() {
     initApp();
 });
 
+async function initAdminDashboard() {
+    try {
+        console.log('Initializing admin dashboard');
+        // Загружаем группы для администратора
+        await loadSportGroups();
+        // Здесь можно добавить динамическую загрузку данных, если нужно
+        // Например, обновление статистики через API
+    } catch (error) {
+        console.error('Error initializing admin dashboard:', error);
+        showError('Ошибка инициализации админской панели');
+    }
+}
+
 async function initApp() {
     try {
-        // Получаем данные пользователя из Telegram
         const userData = tg.initDataUnsafe?.user || {
-            id: 123456789, // Тестовый ID для разработки
+            id: 123456789,
             username: 'test_user',
             first_name: 'Тестовый',
             last_name: 'Пользователь'
         };
 
-        // Инициализируем пользователя на сервере
         const response = await fetch('/api/init', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
+            credentials: 'same-origin',
             body: JSON.stringify(userData)
         });
 
         const result = await response.json();
-        
+
         if (result.success) {
+            console.log('User initialized:', result.user);
             currentUser = result.user;
+
+
+
             showUserPanel();
-            loadSportGroups();
-            
-            // Проверяем авторизацию для родителей
+            await loadSportGroups();
             if (currentUser.role === 'parent') {
                 checkAuthorization();
             }
@@ -52,10 +66,13 @@ async function initApp() {
 }
 
 function showUserPanel() {
+    if (!currentUser) return;
     if (currentUser.role === 'admin') {
-        document.getElementById('adminPanel').style.display = 'block';
+        const adminPanel = document.getElementById('adminPanel');
+        if (adminPanel) adminPanel.style.display = 'block';
     } else {
-        document.getElementById('parentPanel').style.display = 'block';
+        const parentPanel = document.getElementById('parentPanel');
+        if (parentPanel) parentPanel.style.display = 'block';
     }
 }
 
@@ -76,85 +93,218 @@ async function loadSportGroups() {
     }
 }
 
-function renderSportGroups() {
+// Рендер направлений (категорий) на главной
+function renderDirections() {
     const container = document.getElementById('sportGroups');
-    
-    if (sportGroups.length === 0) {
-        container.innerHTML = '<div class="error">Нет доступных групп</div>';
-        return;
-    }
+    const directions = [
+        { key: 'gymnastics', title: 'Гимнастика от 3х лет' },
+        { key: 'judo', title: 'Дзюдо от 4х лет' },
+        { key: 'mma', title: 'ММА от 14 лет' },
+        { key: 'fitness', title: 'Женский фитнес от 18 лет' }
+    ];
+    const byCategory = sportGroups.reduce((acc, g) => {
+        if (!acc[g.category]) acc[g.category] = [];
+        acc[g.category].push(g);
+        return acc;
+    }, {});
 
-    container.innerHTML = sportGroups.map(group => `
+    const html = directions.map(d => {
+        return `
+            <div class="sport-group-card direction-card" onclick="openCategory('${d.key}')">
+                <div class="group-content">
+                    <h3>${d.title}</h3>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    container.innerHTML = html;
+}
+
+// Открыть категорию и показать входящие группы
+function openCategory(category) {
+    const container = document.getElementById('sportGroups');
+    const groups = sportGroups.filter(g => g.category === category);
+    const titleMap = { gymnastics: 'Гимнастика', judo: 'Дзюдо', mma: 'ММА', fitness: 'Женский фитнес' };
+    let html = `
+        <div class="category-header">
+            <button class="btn secondary" onclick="renderDirections()">← Назад</button>
+            <h2 class="category-title">${titleMap[category] || ''}</h2>
+        </div>
+        <div class="category-groups">
+    `;
+
+    html += groups.map(group => `
         <div class="sport-group-card">
             <div class="group-content" onclick="openGroupDetails(${group.id})">
                 <h3>${group.name}</h3>
-                <p>${group.description}</p>
+                <p>${group.description || ''}</p>
+                ${group.schedule ? `<div class="schedule-info"><strong>Расписание:</strong> ${group.schedule}</div>` : ''}
+                <div class="prices">
+                    ${group.price_8 ? `<span class="price-tag">8 занятий: ${group.price_8} ₽</span>` : ''}
+                    ${group.price_12 ? `<span class="price-tag">12 занятий: ${group.price_12} ₽</span>` : ''}
+                    ${group.price_single ? `<span class="price-tag">Разовое: ${group.price_single} ₽</span>` : ''}
+                </div>
             </div>
             ${currentUser && currentUser.role === 'admin' ? `
                 <div class="group-actions">
                     <button class="btn btn-secondary" onclick="showGroupStudents(${group.id}, '${group.name}')">👥 Ученики</button>
+                    <button class="btn btn-secondary" onclick="showGroupSchedule(${group.id}, '${group.name}')">📅 Расписание</button>
+                    <button class="btn btn-secondary" onclick="openGroupAttendance(${group.id}, '${group.name}')">📝 Посещаемость</button>
+                    <button class="btn btn-secondary" onclick="openPaymentsForGroup(${group.id}, '${group.name}')">💰 Платежи</button>
                 </div>
             ` : ''}
         </div>
     `).join('');
+
+    html += '</div>';
+    container.innerHTML = html;
 }
 
-function openGroupDetails(groupId) {
-    // Переходим на страницу с подробной информацией о группе
-    window.location.href = `/group/${groupId}?id=${groupId}`;
+// Переопределяем рендер групп: на главной показываем направления
+function renderSportGroups() {
+    if (!Array.isArray(sportGroups) || sportGroups.length === 0) {
+        document.getElementById('sportGroups').innerHTML = '<div class="error">Нет доступных направлений</div>';
+        return;
+    }
+    renderDirections();
 }
 
+// Остальной код без изменений ниже
+// ... existing code ...
 
+// ===== Админ: просмотр учеников группы =====
+async function showGroupStudents(groupId, groupName) {
+    try {
+        const response = await fetch(`/api/admin/group/${groupId}/students`);
+        const result = await response.json();
+        if (!result.success) {
+            showError('Ошибка загрузки учеников группы: ' + (result.error || ''));
+            return;
+        }
+        const modalHtml = `
+            <div class="modal" id="groupStudentsModal" style="display: block;">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 class="modal-title">👥 Ученики группы: ${groupName}</h3>
+                        <button class="close-btn" onclick="closeGroupStudentsModal()">&times;</button>
+                    </div>
+                    <div class="modal-body" id="groupStudentsList">
+                        ${renderGroupStudents(result.students, groupName)}
+                    </div>
+                </div>
+            </div>`;
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+    } catch (e) {
+        console.error('Ошибка загрузки учеников группы:', e);
+        showError('Ошибка загрузки учеников группы');
+    }
+}
 
-// Функции для модальных окон
+function closeGroupStudentsModal() {
+    const modal = document.getElementById('groupStudentsModal');
+    if (modal) modal.remove();
+}
+
+function renderGroupStudents(students, groupName) {
+    if (!Array.isArray(students) || students.length === 0) {
+        return '<p>В этой группе пока нет учеников с оплаченными подписками</p>';
+    }
+    const totalStudents = students.length;
+    const totalPaid = students.reduce((sum, s) => sum + (s.total_paid || 0), 0);
+    const totalRemaining = students.reduce((sum, s) => sum + (s.remaining_lessons || 0), 0);
+    return `
+        <div class="group-statistics">
+            <h4>📊 Статистика группы "${groupName}":</h4>
+            <div class="stats-grid">
+                <div class="stat-item"><div class="stat-number">${totalStudents}</div><div class="stat-label">Учеников</div></div>
+                <div class="stat-item"><div class="stat-number">${totalPaid.toLocaleString()} ₽</div><div class="stat-label">Оплачено</div></div>
+                <div class="stat-item"><div class="stat-number">${totalRemaining}</div><div class="stat-label">Осталось занятий</div></div>
+            </div>
+        </div>
+        <h4>Список учеников (${students.length}):</h4>
+        ${students.map(student => `
+            <div class="student-item">
+                <div class="student-header">
+                    <div class="student-name">${student.participant_name}</div>
+                    <div class="student-phone">📱 ${student.parent_phone}</div>
+                </div>
+                <div class="student-info">
+                    <div>📅 Дата рождения: ${student.birth_date}</div>
+                    ${student.medical_certificate ? '<div>🏥 Медицинская справка: ✅</div>' : '<div>🏥 Медицинская справка: ❌</div>'}
+                    ${student.discount_type ? `<div>🎫 Скидка: ${student.discount_type} (${student.discount_percent}%)</div>` : ''}
+                    ${student.authorization_code ? `<div>🔐 Код для авторизации: <strong>${student.authorization_code}</strong></div>` : ''}
+                </div>
+                <div class="student-financial">
+                    <div class="financial-summary">
+                        <span>💰 Оплачено: ${student.total_paid || 0} ₽</span>
+                        <span>📚 Осталось занятий: <span class="balance-remaining ${getBalanceClass(student.remaining_lessons || 0)}">${student.remaining_lessons || 0}</span></span>
+                        <span>📅 Тип абонемента: ${student.subscription_type || ''}</span>
+                    </div>
+                </div>
+            </div>
+        `).join('')}
+    `;
+}
+
+// ===== Модальные окна =====
 function showModal(modalId) {
-    document.getElementById(modalId).style.display = 'block';
-    
-    // Загружаем данные для конкретных модальных окон
+    const el = document.getElementById(modalId);
+    if (!el) return;
+    el.style.display = 'block';
+
     if (modalId === 'scheduleModal') {
         loadScheduleData();
     } else if (modalId === 'paymentsModal') {
         loadPaymentsData();
-    } else if (modalId === 'studentsModal') {
-        loadStudentsData();
-    } else if (modalId === 'contactModal') {
-        loadContactData();
-    } else if (modalId === 'paymentModal') {
-        loadPaymentData().then(() => {
-            loadFinancialInfo();
-        });
+    } else if (modalId === 'attendanceModal') {
+        loadAttendanceGroups();
     } else if (modalId === 'discountsModal') {
         loadDiscounts();
         toggleDiscountFormForRole();
-    } else if (modalId === 'attendanceModal') {
-        loadAttendanceGroups();
     } else if (modalId === 'parentAttendanceModal') {
         loadParentAttendance();
     } else if (modalId === 'authorizationModal') {
         loadAuthorizedParticipants();
     } else if (modalId === 'participantsModal') {
         loadParticipantGroups();
+    } else if (modalId === 'contactModal') {
+        loadContactData();
+    } else if (modalId === 'paymentModal') {
+        loadPaymentData();
     }
 }
 
 function closeModal(modalId) {
-    document.getElementById(modalId).style.display = 'none';
+    const el = document.getElementById(modalId);
+    if (el) el.style.display = 'none';
 }
-// Скидки и акции
+
+// Закрытие модалок по клику на фон
+window.onclick = function(event) {
+    const modals = document.querySelectorAll('.modal');
+    modals.forEach(modal => {
+        if (event.target === modal) {
+            modal.style.display = 'none';
+        }
+    });
+}
+
+// ===== Скидки и акции =====
 async function loadDiscounts() {
     try {
-        const response = await fetch('/api/discounts');
-        const result = await response.json();
+        const resp = await fetch('/api/discounts');
+        const data = await resp.json();
         const container = document.getElementById('discountsList');
         if (!container) return;
-        if (result.success) {
-            if (result.discounts.length === 0) {
+        if (data.success) {
+            if ((data.discounts || []).length === 0) {
                 container.innerHTML = '<p>Активных скидок пока нет</p>';
                 return;
             }
             container.innerHTML = `
                 <h4>Действующие предложения:</h4>
-                ${result.discounts.map(d => `
+                ${data.discounts.map(d => `
                     <div class="schedule-item">
                         <div class="schedule-day">${d.name} — ${d.discount_percent}%</div>
                         <div class="schedule-time">${d.discount_type}${formatDiscountDates(d)}</div>
@@ -182,55 +332,19 @@ function formatDiscountDates(d) {
 function toggleDiscountFormForRole() {
     const form = document.getElementById('discountForm');
     if (!form) return;
-    if (currentUser && currentUser.role === 'admin') {
-        form.style.display = 'block';
-    } else {
-        form.style.display = 'none';
-    }
+    form.style.display = (currentUser && currentUser.role === 'admin') ? 'block' : 'none';
 }
-
-// Отправка формы создания скидки (только админ)
-document.getElementById('discountForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    const payload = {
-        name: document.getElementById('discountName').value,
-        description: document.getElementById('discountDescription').value,
-        discount_type: document.getElementById('discountTypeAdmin').value,
-        discount_percent: parseInt(document.getElementById('discountPercentAdmin').value),
-        start_date: document.getElementById('discountStartDate').value || null,
-        end_date: document.getElementById('discountEndDate').value || null,
-        is_active: true
-    };
-    try {
-        const response = await fetch('/api/admin/discounts', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-        const result = await response.json();
-        if (result.success) {
-            showSuccess('Скидка добавлена');
-            this.reset();
-            loadDiscounts();
-        } else {
-            showError('Ошибка добавления: ' + result.error);
-        }
-    } catch (e) {
-        console.error('Ошибка добавления скидки', e);
-        showError('Ошибка добавления скидки');
-    }
-});
 
 async function deleteDiscount(id) {
     if (!confirm('Удалить скидку?')) return;
     try {
-        const response = await fetch(`/api/admin/discounts/${id}`, { method: 'DELETE' });
-        const result = await response.json();
-        if (result.success) {
+        const resp = await fetch(`/api/admin/discounts/${id}`, { method: 'DELETE' });
+        const data = await resp.json();
+        if (data.success) {
             showSuccess('Скидка удалена');
             loadDiscounts();
         } else {
-            showError('Ошибка удаления: ' + result.error);
+            showError('Ошибка удаления: ' + data.error);
         }
     } catch (e) {
         console.error('Ошибка удаления скидки', e);
@@ -238,94 +352,113 @@ async function deleteDiscount(id) {
     }
 }
 
-// Закрытие модальных окон при клике вне их
-window.onclick = function(event) {
-    const modals = document.querySelectorAll('.modal');
-    modals.forEach(modal => {
-        if (event.target === modal) {
-            modal.style.display = 'none';
+// Отправка формы скидок (только админ)
+(function bindDiscountForm(){
+    const form = document.getElementById('discountForm');
+    if (!form) return;
+    form.addEventListener('submit', async function(e){
+        e.preventDefault();
+        const payload = {
+            name: document.getElementById('discountName').value,
+            description: document.getElementById('discountDescription').value,
+            discount_type: document.getElementById('discountTypeSelect').value,
+            discount_percent: parseInt(document.getElementById('discountPercentInput').value),
+            start_date: document.getElementById('discountStartDate').value || null,
+            end_date: document.getElementById('discountEndDate').value || null,
+            is_active: true
+        };
+        try {
+            const resp = await fetch('/api/admin/discounts', {
+                method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload)
+            });
+            const data = await resp.json();
+            if (data.success) {
+                showSuccess('Скидка добавлена');
+                form.reset();
+                loadDiscounts();
+            } else {
+                showError('Ошибка добавления: ' + data.error);
+            }
+        } catch (e) {
+            console.error('Ошибка добавления скидки', e);
+            showError('Ошибка добавления скидки');
         }
     });
-}
+})();
 
-// Загрузка данных для расписания
-async function loadScheduleData() {
+// ===== Контакты =====
+async function loadContactData() {
     try {
-        // Заполняем селект группами
-        const scheduleGroupSelect = document.getElementById('scheduleGroup');
-        scheduleGroupSelect.innerHTML = '<option value="">Выберите группу</option>' +
-            sportGroups.map(group => `<option value="${group.id}">${group.name}</option>`).join('');
-
-        // Загружаем текущее расписание
-        const response = await fetch('/api/admin/schedule');
-        const result = await response.json();
-        
-        const scheduleList = document.getElementById('scheduleList');
-        if (result.success) {
-            if (result.schedules.length > 0) {
-                scheduleList.innerHTML = `
-                    <h4>Текущее расписание:</h4>
-                    ${result.schedules.map(s => `
-                        <div class="schedule-item">
-                            <div class="schedule-day">${s.sport_group_name}</div>
-                            <div class="schedule-time">${getDayName(s.day_of_week)} ${s.start_time} - ${s.end_time}</div>
-                        </div>
-                    `).join('')}
-                `;
-            } else {
-                scheduleList.innerHTML = '<h4>Текущее расписание:</h4><p>Расписание пока не установлено</p>';
-            }
+        const resp = await fetch('/api/parent/contact');
+        const data = await resp.json();
+        const el = document.getElementById('contactInfo');
+        if (!el) return;
+        if (data.success) {
+            el.innerHTML = `
+                <div>
+                    <h4>Контактная информация:</h4>
+                    <p><strong>Телефон:</strong> ${data.contact_info.phone}</p>
+                    <p><strong>Email:</strong> ${data.contact_info.telegram}</p>
+                    <p><strong>Адрес:</strong> ${data.contact_info.address}</p>
+                    <div style="margin-top: 20px;">
+                        <button class="btn" onclick="window.open('tel:${data.contact_info.phone}')">📞 Позвонить</button>
+                        <button class="btn btn-secondary" onclick="window.open('mailto:${data.contact_info.telegram}')">✉️ Написать в телеграм</button>
+                    </div>
+                </div>`;
         } else {
-            scheduleList.innerHTML = '<div class="error">Ошибка загрузки расписания</div>';
+            el.innerHTML = '<div class="error">Ошибка загрузки контактов</div>';
         }
-    } catch (error) {
-        console.error('Ошибка загрузки данных расписания:', error);
+    } catch (e) {
+        console.error('Ошибка загрузки контактов', e);
+        const el = document.getElementById('contactInfo');
+        if (el) el.innerHTML = '<div class="error">Ошибка загрузки контактов</div>';
     }
 }
 
-// Загрузка данных для платежей
+// ===== Платежи (админ список) =====
 async function loadPaymentsData() {
     try {
-        const response = await fetch('/api/admin/payments');
-        const result = await response.json();
-        
-        const paymentsList = document.getElementById('paymentsList');
-        if (result.success) {
-            if (result.payments.length > 0) {
-                paymentsList.innerHTML = `
-                    <h4>Список платежей:</h4>
-                    ${result.payments.map(p => `
-                        <div class="schedule-item payment-item ${p.status}">
-                            <div class="payment-header">
-                                <div class="payment-participant">${p.participant_name}</div>
-                                <div class="payment-status ${p.status}">${getStatusText(p.status)}</div>
-                            </div>
-                            <div class="payment-details">
-                                <div>📱 ${p.participant_phone}</div>
-                                <div>🏃‍♂️ ${p.sport_group} — ${p.subscription_type}</div>
-                                <div>💰 ${p.amount} ₽ (${p.payment_method})</div>
-                                <div>📅 Создан: ${p.created_at}</div>
-                                ${p.payment_date ? `<div>✅ Подтвержден: ${p.payment_date}</div>` : ''}
-                                ${p.admin_notes ? `<div>📝 Заметка: ${p.admin_notes}</div>` : ''}
-                            </div>
-                            ${p.status === 'pending' ? `
-                                <div class="payment-actions">
-                                    <button class="btn btn-success" onclick="approvePayment(${p.id})">✅ Подтвердить</button>
-                                    <button class="btn btn-danger" onclick="rejectPayment(${p.id})">❌ Отклонить</button>
-                                </div>
-                            ` : ''}
-                        </div>
-                    `).join('')}
-                `;
-            } else {
-                paymentsList.innerHTML = '<p>Платежей пока нет</p>';
+        const resp = await fetch('/api/admin/payments');
+        const data = await resp.json();
+        const list = document.getElementById('paymentsList');
+        if (!list) return;
+        if (data.success) {
+            if (data.payments.length === 0) {
+                list.innerHTML = '<p>Платежей пока нет</p>';
+                return;
             }
+            list.innerHTML = `
+                <h4>Список платежей:</h4>
+                ${data.payments.map(p => `
+                    <div class="schedule-item payment-item ${p.status}">
+                        <div class="payment-header">
+                            <div class="payment-participant">${p.participant_name}</div>
+                            <div class="payment-status ${p.status}">${getStatusText(p.status)}</div>
+                        </div>
+                        <div class="payment-details">
+                            <div>📱 ${p.participant_phone}</div>
+                            <div>🏃‍♂️ ${p.sport_group} — ${p.subscription_type}</div>
+                            <div>💰 ${p.amount} ₽ (${p.payment_method})</div>
+                            <div>📅 Создан: ${p.created_at}</div>
+                            ${p.payment_date ? `<div>✅ Подтвержден: ${p.payment_date}</div>` : ''}
+                            ${p.admin_notes ? `<div>📝 Заметка: ${p.admin_notes}</div>` : ''}
+                        </div>
+                        ${p.status === 'pending' ? `
+                            <div class="payment-actions">
+                                <button class="btn btn-success" onclick="approvePayment(${p.id})">✅ Подтвердить</button>
+                                <button class="btn btn-danger" onclick="rejectPayment(${p.id})">❌ Отклонить</button>
+                            </div>
+                        ` : ''}
+                    </div>
+                `).join('')}
+            `;
         } else {
-            paymentsList.innerHTML = '<div class="error">Ошибка загрузки платежей</div>';
+            list.innerHTML = '<div class="error">Ошибка загрузки платежей</div>';
         }
-    } catch (error) {
-        console.error('Ошибка загрузки платежей:', error);
-        document.getElementById('paymentsList').innerHTML = '<div class="error">Ошибка загрузки платежей</div>';
+    } catch (e) {
+        console.error('Ошибка загрузки платежей', e);
+        const list = document.getElementById('paymentsList');
+        if (list) list.innerHTML = '<div class="error">Ошибка загрузки платежей</div>';
     }
 }
 
@@ -340,498 +473,213 @@ function getStatusText(status) {
 
 async function approvePayment(paymentId) {
     const adminNotes = prompt('Введите заметку (необязательно):');
-    
     try {
-        const response = await fetch(`/api/admin/payments/${paymentId}/approve`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ admin_notes: adminNotes || '' })
+        const resp = await fetch(`/api/admin/payments/${paymentId}/approve`, {
+            method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ admin_notes: adminNotes || '' })
         });
-        
-        const result = await response.json();
-        if (result.success) {
+        const data = await resp.json();
+        if (data.success) {
             showSuccess('Платеж подтвержден');
-            loadPaymentsData(); // Перезагружаем список
+            loadPaymentsData();
         } else {
-            showError('Ошибка подтверждения: ' + result.error);
+            showError('Ошибка подтверждения: ' + data.error);
         }
-    } catch (error) {
-        console.error('Ошибка подтверждения платежа:', error);
+    } catch (e) {
+        console.error('Ошибка подтверждения платежа', e);
         showError('Ошибка подтверждения платежа');
     }
 }
 
 async function rejectPayment(paymentId) {
     const adminNotes = prompt('Введите причину отклонения:');
-    if (!adminNotes) {
-        showError('Необходимо указать причину отклонения');
-        return;
-    }
-    
+    if (!adminNotes) { showError('Необходимо указать причину отклонения'); return; }
     try {
-        const response = await fetch(`/api/admin/payments/${paymentId}/reject`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ admin_notes: adminNotes })
+        const resp = await fetch(`/api/admin/payments/${paymentId}/reject`, {
+            method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ admin_notes: adminNotes })
         });
-        
-        const result = await response.json();
-        if (result.success) {
+        const data = await resp.json();
+        if (data.success) {
             showSuccess('Платеж отклонен');
-            loadPaymentsData(); // Перезагружаем список
+            loadPaymentsData();
         } else {
-            showError('Ошибка отклонения: ' + result.error);
+            showError('Ошибка отклонения: ' + data.error);
         }
-    } catch (error) {
-        console.error('Ошибка отклонения платежа:', error);
+    } catch (e) {
+        console.error('Ошибка отклонения платежа', e);
         showError('Ошибка отклонения платежа');
     }
 }
 
-// Показать учеников конкретной группы
-async function showGroupStudents(groupId, groupName) {
+// ===== Расписание (админ общий список) =====
+async function loadScheduleData() {
     try {
-        const response = await fetch(`/api/admin/group/${groupId}/students`);
-        const result = await response.json();
-        
-        if (result.success) {
-            // Создаем модальное окно для отображения учеников группы
-            const modalHtml = `
-                <div class="modal" id="groupStudentsModal" style="display: block;">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h3 class="modal-title">👥 Ученики группы: ${groupName}</h3>
-                            <button class="close-btn" onclick="closeGroupStudentsModal()">&times;</button>
-                        </div>
-                        <div id="groupStudentsList">
-                            ${renderGroupStudents(result.students, groupName)}
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            // Добавляем модальное окно в body
-            document.body.insertAdjacentHTML('beforeend', modalHtml);
-        } else {
-            showError('Ошибка загрузки учеников группы: ' + result.error);
+        const select = document.getElementById('scheduleGroup');
+        if (select) {
+            select.innerHTML = '<option value="">Выберите группу</option>' + sportGroups.map(g => `<option value="${g.id}">${g.name}</option>`).join('');
         }
-    } catch (error) {
-        console.error('Ошибка загрузки учеников группы:', error);
-        showError('Ошибка загрузки учеников группы');
-    }
-}
-
-function closeGroupStudentsModal() {
-    const modal = document.getElementById('groupStudentsModal');
-    if (modal) {
-        modal.remove();
-    }
-}
-
-function renderGroupStudents(students, groupName) {
-    if (students.length === 0) {
-        return '<p>В этой группе пока нет учеников с оплаченными подписками</p>';
-    }
-    
-    // Вычисляем статистику группы
-    const totalStudents = students.length;
-    const totalPaid = students.reduce((sum, student) => sum + student.total_paid, 0);
-    const totalRemaining = students.reduce((sum, student) => sum + student.remaining_lessons, 0);
-    
-    return `
-        <div class="group-statistics">
-            <h4>📊 Статистика группы "${groupName}":</h4>
-            <div class="stats-grid">
-                <div class="stat-item">
-                    <div class="stat-number">${totalStudents}</div>
-                    <div class="stat-label">Учеников</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number">${totalPaid.toLocaleString()} ₽</div>
-                    <div class="stat-label">Оплачено</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number">${totalRemaining}</div>
-                    <div class="stat-label">Осталось занятий</div>
-                </div>
-            </div>
-        </div>
-        <h4>Список учеников (${students.length}):</h4>
-        ${students.map(student => `
-            <div class="student-item">
-                <div class="student-header">
-                    <div class="student-name">${student.participant_name}</div>
-                    <div class="student-phone">📱 ${student.parent_phone}</div>
-                </div>
-                <div class="student-info">
-                    <div>📅 Дата рождения: ${student.birth_date}</div>
-                    ${student.medical_certificate ? '<div>🏥 Медицинская справка: ✅</div>' : '<div>🏥 Медицинская справка: ❌</div>'}
-                    ${student.discount_type ? `<div>🎫 Скидка: ${student.discount_type} (${student.discount_percent}%)</div>` : ''}
-                </div>
-                <div class="student-financial">
-                    <div class="financial-summary">
-                        <span>💰 Оплачено: ${student.total_paid} ₽</span>
-                        <span>📚 Осталось занятий: <span class="balance-remaining ${getBalanceClass(student.remaining_lessons)}">${student.remaining_lessons}</span></span>
-                        <span>📅 Тип абонемента: ${student.subscription_type}</span>
-                    </div>
-                </div>
-            </div>
-        `).join('')}
-    `;
-}
-
-// Загрузка данных учеников для администратора
-async function loadStudentsData() {
-    try {
-        const response = await fetch('/api/admin/students');
-        const result = await response.json();
-        const studentsList = document.getElementById('studentsList');
-        
-        if (result.success) {
-            // Фильтруем только учеников с оплаченными подписками
-            const studentsWithPaidSubscriptions = result.students.filter(student => student.total_paid_all > 0);
-            
-            if (studentsWithPaidSubscriptions.length > 0) {
-                // Вычисляем общую статистику
-                const totalStudents = studentsWithPaidSubscriptions.length;
-                const totalPaid = studentsWithPaidSubscriptions.reduce((sum, student) => sum + student.total_paid_all, 0);
-                const totalRemaining = studentsWithPaidSubscriptions.reduce((sum, student) => sum + student.total_remaining_all, 0);
-                const totalSubscriptions = studentsWithPaidSubscriptions.reduce((sum, student) => sum + student.subscription_count, 0);
-                const studentsWithMedical = studentsWithPaidSubscriptions.filter(student => student.medical_certificate).length;
-                const studentsWithDiscount = studentsWithPaidSubscriptions.filter(student => student.discount_type).length;
-                
-                studentsList.innerHTML = `
-                    <div class="statistics-summary">
-                        <h4>📊 Общая статистика:</h4>
-                        <div class="stats-grid">
-                            <div class="stat-item">
-                                <div class="stat-number">${totalStudents}</div>
-                                <div class="stat-label">Всего учеников</div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="stat-number">${totalPaid.toLocaleString()} ₽</div>
-                                <div class="stat-label">Общая оплата</div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="stat-number">${totalRemaining}</div>
-                                <div class="stat-label">Осталось занятий</div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="stat-number">${totalSubscriptions}</div>
-                                <div class="stat-label">Активных подписок</div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="stat-number">${studentsWithMedical}</div>
-                                <div class="stat-label">С мед. справкой</div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="stat-number">${studentsWithDiscount}</div>
-                                <div class="stat-label">Со скидкой</div>
-                            </div>
-                        </div>
-                    </div>
-                    <h4>Список учеников с оплаченными подписками (${studentsWithPaidSubscriptions.length}):</h4>
-                    ${studentsWithPaidSubscriptions.map(student => `
-                        <div class="student-item">
-                            <div class="student-header">
-                                <div class="student-name">${student.participant_name}</div>
-                                <div class="student-phone">📱 ${student.parent_phone}</div>
-                            </div>
-                            <div class="student-info">
-                                <div>📅 Дата рождения: ${student.birth_date}</div>
-                                ${student.medical_certificate ? '<div>🏥 Медицинская справка: ✅</div>' : '<div>🏥 Медицинская справка: ❌</div>'}
-                                ${student.discount_type ? `<div>🎫 Скидка: ${student.discount_type} (${student.discount_percent}%)</div>` : ''}
-                            </div>
-                            <div class="student-financial">
-                                <div class="financial-summary">
-                                    <span>💰 Всего оплачено: ${student.total_paid_all} ₽</span>
-                                    <span>📚 Осталось занятий: <span class="balance-remaining ${getBalanceClass(student.total_remaining_all)}">${student.total_remaining_all}</span></span>
-                                    <span>📋 Подписок: ${student.subscription_count}</span>
-                                </div>
-                                ${student.subscriptions.length > 0 ? `
-                                    <div class="subscriptions-list">
-                                        <h5>Подписки:</h5>
-                                        ${student.subscriptions.map(sub => `
-                                            <div class="subscription-item">
-                                                <div class="subscription-header">
-                                                    <div>🏃‍♂️ ${sub.sport_group_name} — ${sub.subscription_type}</div>
-                                                    <button class="btn btn-danger btn-small" onclick="deleteSubscription(${sub.subscription_id}, '${student.participant_name}', '${sub.sport_group_name}')">🗑️</button>
-                                                </div>
-                                                <div>💰 Оплачено: ${sub.total_paid} ₽ | Осталось: <span class="balance-remaining ${getBalanceClass(sub.remaining_lessons)}">${sub.remaining_lessons}</span></div>
-                                                <div>📅 ${sub.start_date} — ${sub.end_date}</div>
-                                            </div>
-                                        `).join('')}
-                                    </div>
-                                ` : '<div class="no-subscriptions">Нет активных подписок</div>'}
-                            </div>
+        const resp = await fetch('/api/admin/schedule');
+        const data = await resp.json();
+        const list = document.getElementById('scheduleList');
+        if (!list) return;
+        if (data.success) {
+            if ((data.schedules || []).length > 0) {
+                list.innerHTML = `
+                    <h4>Текущее расписание:</h4>
+                    ${data.schedules.map(s => `
+                        <div class="schedule-item">
+                            <div class="schedule-day">${s.sport_group_name}</div>
+                            <div class="schedule-time">${getDayName(s.day_of_week)} ${s.start_time} - ${s.end_time}</div>
                         </div>
                     `).join('')}
                 `;
             } else {
-                studentsList.innerHTML = '<p>Учеников с оплаченными подписками пока нет</p>';
+                list.innerHTML = '<h4>Текущее расписание:</h4><p>Расписание пока не установлено</p>';
             }
         } else {
-            studentsList.innerHTML = '<div class="error">Ошибка загрузки учеников</div>';
+            list.innerHTML = '<div class="error">Ошибка загрузки расписания</div>';
         }
-    } catch (error) {
-        console.error('Ошибка загрузки учеников:', error);
-        document.getElementById('studentsList').innerHTML = '<div class="error">Ошибка загрузки учеников</div>';
+    } catch (e) {
+        console.error('Ошибка загрузки данных расписания', e);
     }
 }
 
-// Загрузка контактных данных
-async function loadContactData() {
-    try {
-        const response = await fetch('/api/parent/contact');
-        const result = await response.json();
-        
-        const contactInfo = document.getElementById('contactInfo');
-        if (result.success) {
-            contactInfo.innerHTML = `
-                <div>
-                    <h4>Контактная информация:</h4>
-                    <p><strong>Телефон:</strong> ${result.contact_info.phone}</p>
-                    <p><strong>Email:</strong> ${result.contact_info.email}</p>
-                    <p><strong>Адрес:</strong> ${result.contact_info.address}</p>
-                    
-                    <div style="margin-top: 20px;">
-                        <button class="btn" onclick="window.open('tel:${result.contact_info.phone}')">
-                            📞 Позвонить
-                        </button>
-                        <button class="btn btn-secondary" onclick="window.open('mailto:${result.contact_info.email}')">
-                            ✉️ Написать email
-                        </button>
-                    </div>
-                </div>
-            `;
-        } else {
-            contactInfo.innerHTML = '<div class="error">Ошибка загрузки контактов</div>';
-        }
-    } catch (error) {
-        console.error('Ошибка загрузки контактов:', error);
-        document.getElementById('contactInfo').innerHTML = '<div class="error">Ошибка загрузки контактов</div>';
-    }
-}
-
-// Загрузка данных для оплаты
-async function loadPaymentData() {
-    // Загружаем авторизованных участников
-    try {
-        const response = await fetch('/api/auth/participants');
-        const result = await response.json();
-        
-        const participantSelect = document.getElementById('paymentParticipant');
-        participantSelect.innerHTML = '<option value="">Выберите участника</option>';
-        
-        if (result.success && result.participants.length > 0) {
-            result.participants.forEach(participant => {
-                participantSelect.innerHTML += `<option value="${participant.id}">${participant.full_name}</option>`;
+// Формы: участники, расписание, оплата
+(function bindParticipantForm(){
+    const form = document.getElementById('participantForm');
+    if (!form) return;
+    form.addEventListener('submit', async function(e){
+        e.preventDefault();
+        const payload = {
+            full_name: document.getElementById('fullName').value,
+            parent_phone: document.getElementById('parentPhone').value,
+            birth_date: document.getElementById('birthDate').value,
+            sport_group_id: parseInt(document.getElementById('participantGroup').value),
+            medical_certificate: document.getElementById('medicalCertificate').checked,
+            discount_type: document.getElementById('discountType').value,
+            discount_percent: parseInt(document.getElementById('discountPercent').value) || 0
+        };
+        try {
+            const resp = await fetch('/api/admin/participants', {
+                method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)
             });
-        } else {
-            participantSelect.innerHTML = '<option value="">Нет авторизованных участников</option>';
+            const data = await resp.json();
+            if (data.success) {
+                showSuccess(data.authorization_code ? `Участник зарегистрирован! Код: ${data.authorization_code}` : 'Участник зарегистрирован');
+                form.reset();
+                closeModal('participantsModal');
+            } else {
+                showError('Ошибка регистрации: ' + data.error);
+            }
+        } catch (e) {
+            console.error('Ошибка регистрации участника', e);
+            showError('Ошибка регистрации участника');
         }
-    } catch (error) {
-        console.error('Ошибка загрузки участников:', error);
-        document.getElementById('paymentParticipant').innerHTML = '<option value="">Ошибка загрузки участников</option>';
+    });
+})();
+
+(function bindScheduleForm(){
+    const form = document.getElementById('scheduleForm');
+    if (!form) return;
+    form.addEventListener('submit', async function(e){
+        e.preventDefault();
+        const payload = {
+            sport_group_id: parseInt(document.getElementById('scheduleGroup').value),
+            day_of_week: parseInt(document.getElementById('dayOfWeek').value),
+            start_time: document.getElementById('startTime').value,
+            end_time: document.getElementById('endTime').value
+        };
+        try {
+            const resp = await fetch('/api/admin/schedule', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)});
+            const data = await resp.json();
+            if (data.success) {
+                showSuccess('Расписание успешно добавлено');
+                form.reset();
+                loadScheduleData();
+            } else {
+                showError('Ошибка добавления расписания: ' + data.error);
+            }
+        } catch (e) {
+            console.error('Ошибка добавления расписания', e);
+            showError('Ошибка добавления расписания');
+        }
+    });
+})();
+
+// Оплата (родитель)
+async function loadPaymentData() {
+    try {
+        // Участники
+        const resp = await fetch('/api/auth/participants');
+        const data = await resp.json();
+        const select = document.getElementById('paymentParticipant');
+        if (select) {
+            select.innerHTML = '<option value="">Выберите участника</option>';
+            if (data.success && (data.participants||[]).length > 0) {
+                data.participants.forEach(p => select.innerHTML += `<option value="${p.id}">${p.full_name}</option>`);
+            } else {
+                select.innerHTML = '<option value="">Нет авторизованных участников</option>';
+            }
+        }
+        // Группы
+        const groupSelect = document.getElementById('paymentGroup');
+        if (groupSelect) {
+            groupSelect.innerHTML = '<option value="">Выберите группу</option>' + sportGroups.map(g => `<option value="${g.id}">${g.name}</option>`).join('');
+            groupSelect.onchange = function(){ calculatePayment(this.value, document.getElementById('paymentType').value); };
+        }
+        const typeSelect = document.getElementById('paymentType');
+        if (typeSelect) {
+            typeSelect.onchange = function(){ calculatePayment(document.getElementById('paymentGroup').value, this.value); };
+        }
+    } catch (e) {
+        console.error('Ошибка загрузки данных оплаты', e);
     }
-    
-    const paymentGroupSelect = document.getElementById('paymentGroup');
-    paymentGroupSelect.innerHTML = '<option value="">Выберите группу</option>' +
-        sportGroups.map(group => `<option value="${group.id}">${group.name}</option>`).join('');
-    
-    // Обработчик изменения группы для расчета стоимости
-    paymentGroupSelect.addEventListener('change', function() {
-        const groupId = this.value;
-        const subscriptionType = document.getElementById('subscriptionType').value;
-        calculatePayment(groupId, subscriptionType);
-    });
-    
-    // Обработчик изменения типа абонемента
-    document.getElementById('subscriptionType').addEventListener('change', function() {
-        const groupId = document.getElementById('paymentGroup').value;
-        const subscriptionType = this.value;
-        calculatePayment(groupId, subscriptionType);
-    });
 }
 
-// Расчет стоимости оплаты
 function calculatePayment(groupId, subscriptionType) {
-    const group = sportGroups.find(g => g.id == groupId);
+    const group = sportGroups.find(g => String(g.id) === String(groupId));
     if (!group) return;
-    
     let amount = 0;
     switch (subscriptionType) {
-        case '8 занятий':
-            amount = group.price_8;
-            break;
-        case '12 занятий':
-            amount = group.price_12;
-            break;
-        case 'Разовые занятия':
-            amount = group.price_single;
-            break;
+        case '8 занятий': amount = group.price_8; break;
+        case '12 занятий': amount = group.price_12; break;
+        case 'Разовые занятия': amount = group.price_single; break;
+        default: amount = 0;
     }
-    
-    document.getElementById('paymentAmount').value = amount;
+    const amountInput = document.getElementById('paymentAmount');
+    if (amountInput) amountInput.value = amount || 0;
 }
 
-// Обработчики форм
-document.getElementById('participantForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
-    const formData = {
-        full_name: document.getElementById('fullName').value,
-        parent_phone: document.getElementById('parentPhone').value,
-        birth_date: document.getElementById('birthDate').value,
-        sport_group_id: parseInt(document.getElementById('participantGroup').value),
-        medical_certificate: document.getElementById('medicalCertificate').checked,
-        discount_type: document.getElementById('discountType').value,
-        discount_percent: parseInt(document.getElementById('discountPercent').value) || 0
-    };
-    
-    try {
-        const response = await fetch('/api/admin/participants', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(formData)
-        });
-        
-        const result = await response.json();
-        if (result.success) {
-            if (result.authorization_code) {
-                showSuccess(`Участник успешно зарегистрирован! Код авторизации: ${result.authorization_code}`);
+(function bindPaymentForm(){
+    const form = document.getElementById('paymentForm');
+    if (!form) return;
+    form.addEventListener('submit', async function(e){
+        e.preventDefault();
+        const participantId = document.getElementById('paymentParticipant').value;
+        if (!participantId) { showError('Пожалуйста, выберите участника'); return; }
+        const payload = {
+            participant_id: parseInt(participantId),
+            sport_group_id: parseInt(document.getElementById('paymentGroup').value),
+            subscription_type: document.getElementById('paymentType').value,
+            total_lessons: getLessonsCount(document.getElementById('paymentType').value),
+            amount: parseInt(document.getElementById('paymentAmount').value),
+            payment_method: 'cash'
+        };
+        try {
+            const resp = await fetch('/api/parent/payment', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)});
+            const data = await resp.json();
+            if (data.success) {
+                showSuccess(data.message || 'Платеж создан и ожидает подтверждения администратора');
+                form.reset();
+                closeModal('paymentModal');
             } else {
-                showSuccess('Участник успешно зарегистрирован');
+                showError('Ошибка создания платежа: ' + data.error);
             }
-            this.reset();
-            closeModal('participantsModal');
-        } else {
-            showError('Ошибка регистрации: ' + result.error);
+        } catch (e) {
+            console.error('Ошибка создания платежа', e);
+            showError('Ошибка создания платежа');
         }
-    } catch (error) {
-        console.error('Ошибка регистрации участника:', error);
-        showError('Ошибка регистрации участника');
-    }
-});
-
-document.getElementById('scheduleForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
-    const formData = {
-        sport_group_id: parseInt(document.getElementById('scheduleGroup').value),
-        day_of_week: parseInt(document.getElementById('dayOfWeek').value),
-        start_time: document.getElementById('startTime').value,
-        end_time: document.getElementById('endTime').value
-    };
-    
-    try {
-        const response = await fetch('/api/admin/schedule', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(formData)
-        });
-        
-        const result = await response.json();
-        if (result.success) {
-            showSuccess('Расписание успешно добавлено');
-            this.reset();
-            loadScheduleData(); // Перезагружаем список расписания
-        } else {
-            showError('Ошибка добавления расписания: ' + result.error);
-        }
-    } catch (error) {
-        console.error('Ошибка добавления расписания:', error);
-        showError('Ошибка добавления расписания');
-    }
-});
-
-document.getElementById('paymentForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
-    const participantId = document.getElementById('paymentParticipant').value;
-    if (!participantId) {
-        showError('Пожалуйста, выберите участника');
-        return;
-    }
-    
-    const formData = {
-        participant_id: parseInt(participantId),
-        sport_group_id: parseInt(document.getElementById('paymentGroup').value),
-        subscription_type: document.getElementById('subscriptionType').value,
-        total_lessons: getLessonsCount(document.getElementById('subscriptionType').value),
-        amount: parseInt(document.getElementById('paymentAmount').value),
-        payment_method: document.getElementById('paymentMethod').value
-    };
-    
-    try {
-        const response = await fetch('/api/parent/payment', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(formData)
-        });
-        
-        const result = await response.json();
-        if (result.success) {
-            showSuccess(result.message || 'Платеж успешно создан и ожидает подтверждения администратора');
-            this.reset();
-            closeModal('paymentModal');
-        } else {
-            showError('Ошибка создания платежа: ' + result.error);
-        }
-    } catch (error) {
-        console.error('Ошибка создания платежа:', error);
-        showError('Ошибка создания платежа');
-    }
-});
-
-document.getElementById('transferForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
-    const formData = {
-        subscription_id: 1, // В реальном приложении нужно выбирать из списка подписок
-        original_date: document.getElementById('originalDate').value,
-        new_date: document.getElementById('newDate').value,
-        reason: document.getElementById('transferReason').value
-    };
-    
-    try {
-        const response = await fetch('/api/parent/transfer', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(formData)
-        });
-        
-        const result = await response.json();
-        if (result.success) {
-            showSuccess('Запрос на перенос отправлен');
-            this.reset();
-            closeModal('transferModal');
-        } else {
-            showError('Ошибка отправки запроса: ' + result.error);
-        }
-    } catch (error) {
-        console.error('Ошибка отправки запроса на перенос:', error);
-        showError('Ошибка отправки запроса на перенос');
-    }
-});
-
-// Вспомогательные функции
-function getDayName(dayOfWeek) {
-    const days = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'];
-    return days[dayOfWeek] || 'Неизвестный день';
-}
+    });
+})();
 
 function getLessonsCount(subscriptionType) {
     switch (subscriptionType) {
@@ -842,680 +690,675 @@ function getLessonsCount(subscriptionType) {
     }
 }
 
-function showSuccess(message) {
-    tg.showAlert(message);
-}
-
-function showError(message) {
-    tg.showAlert(message);
-}
-
-// ===== ФУНКЦИИ ДЛЯ СИСТЕМЫ ПОСЕЩАЕМОСТИ =====
-
-// Глобальные переменные для посещаемости
-let currentAttendanceGroup = null;
-let currentAttendanceDate = null;
-let currentAttendanceId = null;
-
-// Инициализация модальных окон посещаемости
-// Обработчики будут добавлены при открытии модальных окон
-
-// Загрузка групп для учета посещаемости (админ)
+// ===== Посещаемость (админ) =====
 async function loadAttendanceGroups() {
     try {
-        const response = await fetch('/api/admin/attendance/groups');
-        const result = await response.json();
-        
-        if (result.success) {
-            renderAttendanceGroups(result.groups);
+        const resp = await fetch('/api/admin/attendance/groups');
+        const data = await resp.json();
+        const container = document.getElementById('attendanceContent');
+        if (!container) return;
+        if (data.success) {
+            container.innerHTML = `
+                <div style="margin-bottom: 16px;"><h4 style="margin-bottom: 12px; color: #ffffff;">Выберите группу для учета посещаемости:</h4></div>
+                ${data.groups.map(group => `
+                    <div class="attendance-group">
+                        <div onclick="selectAttendanceGroup(${group.id}, '${group.name.replace(/'/g, "\'")}')" style="cursor: pointer;">
+                            <h4 style="margin-bottom: 4px; color: #ffffff;">${group.name}</h4>
+                            <p style="color: #9ca3af; font-size: 13px;">${group.description||''}</p>
+                        </div>
+                        <div style="margin-top: 8px;"><button class="btn btn-secondary" onclick="loadAttendanceStats(${group.id})" style="font-size:12px; padding:6px 12px;">📊 Статистика</button></div>
+                    </div>`).join('')}
+            `;
         } else {
-            showError('Ошибка загрузки групп: ' + result.error);
+            container.innerHTML = '<div class="error">Ошибка загрузки групп</div>';
         }
-    } catch (error) {
-        console.error('Ошибка загрузки групп посещаемости:', error);
+    } catch (e) {
+        console.error('Ошибка загрузки групп посещаемости', e);
         showError('Ошибка загрузки групп');
     }
 }
 
-// Отображение групп для учета посещаемости
-function renderAttendanceGroups(groups) {
-    const container = document.getElementById('attendanceContent');
-    
-    if (groups.length === 0) {
-        container.innerHTML = '<div class="error">Нет доступных групп</div>';
-        return;
-    }
-
-    container.innerHTML = `
-        <div style="margin-bottom: 16px;">
-            <h4 style="margin-bottom: 12px; color: #ffffff;">Выберите группу для учета посещаемости:</h4>
-        </div>
-        ${groups.map(group => `
-            <div class="attendance-group">
-                <div onclick="selectAttendanceGroup(${group.id}, '${group.name}')" style="cursor: pointer;">
-                    <h4 style="margin-bottom: 4px; color: #ffffff;">${group.name}</h4>
-                    <p style="color: #9ca3af; font-size: 13px;">${group.description}</p>
-                </div>
-                <div style="margin-top: 8px;">
-                    <button class="btn btn-secondary" onclick="loadAttendanceStats(${group.id})" style="font-size: 12px; padding: 6px 12px;">
-                        📊 Статистика
-                    </button>
-                </div>
-            </div>
-        `).join('')}
-    `;
-}
-
-// Выбор группы для учета посещаемости
 async function selectAttendanceGroup(groupId, groupName) {
-    currentAttendanceGroup = { id: groupId, name: groupName };
-    
+    window.currentAttendanceGroup = { id: groupId, name: groupName };
     try {
-        const response = await fetch(`/api/admin/attendance/schedule/${groupId}`);
-        const result = await response.json();
-        
-        if (result.success) {
-            renderAttendanceDates(result.dates, groupName);
+        const resp = await fetch(`/api/admin/attendance/schedule/${groupId}`);
+        const data = await resp.json();
+        if (data.success) {
+            renderAttendanceDates(data.dates, groupName);
             closeModal('attendanceModal');
-            showModal('attendanceDateModal');
+            // Создаем модалку дат
+            const html = `
+                <div class="modal" id="attendanceDateModal" style="display:block;">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3 class="modal-title">Выбор даты</h3>
+                            <button class="close-btn" onclick="closeModal('attendanceDateModal')">&times;</button>
+                        </div>
+                        <div class="modal-body" id="attendanceDatesList"></div>
+                    </div>
+                </div>`;
+            document.body.insertAdjacentHTML('beforeend', html);
+            renderAttendanceDates(data.dates, groupName);
         } else {
-            showError('Ошибка загрузки расписания: ' + result.error);
+            showError('Ошибка загрузки расписания: ' + data.error);
         }
-    } catch (error) {
-        console.error('Ошибка загрузки расписания посещаемости:', error);
+    } catch (e) {
+        console.error('Ошибка загрузки расписания посещаемости', e);
         showError('Ошибка загрузки расписания');
     }
 }
 
-// Отображение дат для учета посещаемости
 function renderAttendanceDates(dates, groupName) {
     const container = document.getElementById('attendanceDatesList');
-    
-    if (dates.length === 0) {
+    if (!container) return;
+    if (!dates || dates.length === 0) {
         container.innerHTML = '<div class="error">Нет запланированных занятий</div>';
         return;
     }
-
     container.innerHTML = `
         <div style="margin-bottom: 16px;">
             <h4 style="margin-bottom: 8px; color: #ffffff;">${groupName}</h4>
-            <p style="color: #9ca3af; font-size: 13px; margin-bottom: 12px;">Выберите дату занятия:</p>
+            <p style="color:#9ca3af; font-size:13px; margin-bottom:12px;">Выберите дату занятия:</p>
         </div>
         ${dates.map(date => `
-            <div class="attendance-date ${date.has_attendance ? (date.is_completed ? 'completed' : 'pending') : ''}" 
+            <div class="attendance-date ${date.has_attendance ? (date.is_completed ? 'completed' : 'pending') : ''}"
                  onclick="selectAttendanceDate('${date.date}', '${date.day_name} ${date.day_number} ${date.month} ${date.year}')">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
                     <div>
-                        <div style="font-weight: 600; color: #ffffff;">${date.day_name} ${date.day_number} ${date.month}</div>
-                        <div style="font-size: 12px; color: #9ca3af;">${date.start_time} - ${date.end_time}</div>
+                        <div style="font-weight:600; color:#ffffff;">${date.day_name} ${date.day_number} ${date.month}</div>
+                        <div style="font-size:12px; color:#9ca3af;">${date.start_time} - ${date.end_time}</div>
                     </div>
-                    <div style="font-size: 12px; color: #9ca3af;">
-                        ${date.has_attendance ? (date.is_completed ? '✅ Завершено' : '⏳ Ожидает') : '📝 Новое'}
-                    </div>
+                    <div style="font-size:12px; color:#9ca3af;">${date.has_attendance ? (date.is_completed ? '✅ Завершено' : '⏳ Ожидает') : '📝 Новое'}</div>
                 </div>
-            </div>
-        `).join('')}
-        <div style="margin-top: 20px;">
-            <button class="btn btn-secondary" onclick="loadAttendanceStats(${currentAttendanceGroup.id})">
-                📊 Просмотреть статистику группы
-            </button>
-        </div>
+            </div>`).join('')}
+        <div style="margin-top:20px;"><button class="btn btn-secondary" onclick="loadAttendanceStats(${window.currentAttendanceGroup.id})">📊 Просмотреть статистику группы</button></div>
     `;
 }
 
-// Выбор даты для учета посещаемости
 async function selectAttendanceDate(date, dateDisplay) {
-    currentAttendanceDate = { date: date, display: dateDisplay };
-    
+    window.currentAttendanceDate = { date, display: dateDisplay };
     try {
-        const response = await fetch(`/api/admin/attendance/participants/${currentAttendanceGroup.id}/${date}`);
-        const result = await response.json();
-        
-        if (result.success) {
-            currentAttendanceId = result.attendance_id;
-            renderAttendanceParticipants(result.participants, dateDisplay, result.is_completed);
-            closeModal('attendanceDateModal');
-            showModal('attendanceRecordModal');
+        const resp = await fetch(`/api/admin/attendance/participants/${window.currentAttendanceGroup.id}/${date}`);
+        const data = await resp.json();
+        if (data.success) {
+            window.currentAttendanceId = data.attendance_id;
+            const html = `
+                <div class="modal" id="attendanceRecordModal" style="display:block;">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3 class="modal-title">Отметка посещаемости</h3>
+                            <button class="close-btn" onclick="closeModal('attendanceRecordModal')">&times;</button>
+                        </div>
+                        <div class="modal-body" id="attendanceRecordContent"></div>
+                    </div>
+                </div>`;
+            document.body.insertAdjacentHTML('beforeend', html);
+            renderAttendanceParticipants(data.participants, dateDisplay, data.is_completed);
         } else {
-            showError('Ошибка загрузки участников: ' + result.error);
+            showError('Ошибка загрузки участников: ' + data.error);
         }
-    } catch (error) {
-        console.error('Ошибка загрузки участников:', error);
+    } catch (e) {
+        console.error('Ошибка загрузки участников', e);
         showError('Ошибка загрузки участников');
     }
 }
 
-// Отображение участников для учета посещаемости
 function renderAttendanceParticipants(participants, dateDisplay, isCompleted) {
     const container = document.getElementById('attendanceRecordContent');
-    
-    if (participants.length === 0) {
+    if (!container) return;
+    if (!participants || participants.length === 0) {
         container.innerHTML = '<div class="error">Нет участников в группе</div>';
         return;
     }
-
     container.innerHTML = `
-        <div style="margin-bottom: 16px;">
-            <h4 style="margin-bottom: 8px; color: #ffffff;">${currentAttendanceGroup.name}</h4>
-            <p style="color: #9ca3af; font-size: 13px; margin-bottom: 12px;">${dateDisplay}</p>
+        <div style="margin-bottom:16px;">
+            <h4 style="margin-bottom:8px; color:#ffffff;">${window.currentAttendanceGroup.name}</h4>
+            <p style="color:#9ca3af; font-size:13px; margin-bottom:12px;">${dateDisplay}</p>
         </div>
-        ${participants.map(participant => `
-            <div class="participant-item" data-participant-id="${participant.id}">
+        ${participants.map(p => `
+            <div class="participant-item" data-participant-id="${p.id}">
                 <div class="participant-info">
-                    <div class="participant-name">${participant.full_name}</div>
-                    <div class="participant-phone">${participant.parent_phone}</div>
+                    <div class="participant-name">${p.full_name}</div>
+                    <div class="participant-phone">${p.parent_phone}</div>
                 </div>
                 <div class="attendance-controls">
                     <div class="attendance-toggle">
-                        <div class="toggle-switch ${participant.is_present ? 'active' : ''}" 
-                             onclick="toggleAttendance(${participant.id}, this)">
-                        </div>
-                        <span class="attendance-status ${participant.is_present ? 'present' : 'absent'}">
-                            ${participant.is_present ? 'Присутствует' : 'Отсутствует'}
-                        </span>
+                        <div class="toggle-switch ${p.is_present ? 'active' : ''}" onclick="toggleAttendance(${p.id}, this)"></div>
+                        <span class="attendance-status ${p.is_present ? 'present' : 'absent'}">${p.is_present ? 'Присутствует' : 'Отсутствует'}</span>
                     </div>
-                    <div class="absence-reason" style="display: ${participant.is_present ? 'none' : 'block'}; margin-top: 8px;">
-                        <select class="reason-select" onchange="updateAbsenceReason(${participant.id}, this.value)">
+                    <div class="absence-reason" style="display:${p.is_present ? 'none' : 'block'}; margin-top:8px;">
+                        <select class="reason-select" onchange="updateAbsenceReason(${p.id}, this.value)">
                             <option value="unexcused">Без уважительной причины</option>
                             <option value="excused">По уважительной причине</option>
                         </select>
                     </div>
                 </div>
-            </div>
-        `).join('')}
-        <div style="margin-top: 20px;">
-            <button class="btn" onclick="saveAttendance()" ${isCompleted ? 'disabled' : ''}>
-                ${isCompleted ? 'Посещаемость уже сохранена' : 'Сохранить посещаемость'}
-            </button>
-        </div>
+            </div>`).join('')}
+        <div style="margin-top:20px;"><button class="btn" onclick="saveAttendance()" ${isCompleted ? 'disabled' : ''}>${isCompleted ? 'Посещаемость уже сохранена' : 'Сохранить посещаемость'}</button></div>
     `;
 }
 
-// Переключение статуса посещаемости
-function toggleAttendance(participantId, element) {
-    const toggle = element;
-    const statusElement = toggle.nextElementSibling;
-    const participantItem = toggle.closest('.participant-item');
-    const absenceReason = participantItem.querySelector('.absence-reason');
-    
+function toggleAttendance(participantId, el) {
+    const toggle = el;
+    const status = toggle.nextElementSibling;
+    const item = toggle.closest('.participant-item');
+    const reason = item.querySelector('.absence-reason');
     toggle.classList.toggle('active');
-    const isPresent = toggle.classList.contains('active');
-    
-    statusElement.textContent = isPresent ? 'Присутствует' : 'Отсутствует';
-    statusElement.className = `attendance-status ${isPresent ? 'present' : 'absent'}`;
-    
-    // Показываем/скрываем выбор причины отсутствия
-    if (absenceReason) {
-        absenceReason.style.display = isPresent ? 'none' : 'block';
-    }
+    const present = toggle.classList.contains('active');
+    status.textContent = present ? 'Присутствует' : 'Отсутствует';
+    status.className = `attendance-status ${present ? 'present' : 'absent'}`;
+    if (reason) reason.style.display = present ? 'none' : 'block';
 }
 
-// Обновление причины отсутствия
 function updateAbsenceReason(participantId, reason) {
-    // Сохраняем причину в data-атрибуте элемента
-    const participantItem = document.querySelector(`[data-participant-id="${participantId}"]`);
-    if (participantItem) {
-        participantItem.setAttribute('data-absence-reason', reason);
-    }
+    const item = document.querySelector(`[data-participant-id="${participantId}"]`);
+    if (item) item.setAttribute('data-absence-reason', reason);
 }
 
-// Удаление подписки
-async function deleteSubscription(subscriptionId, participantName, groupName) {
-    if (!confirm(`Вы уверены, что хотите удалить подписку ${participantName} в группе "${groupName}"? Это действие нельзя отменить.`)) {
-        return;
-    }
-    
-    try {
-        const response = await fetch(`/api/admin/subscription/${subscriptionId}/delete`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        });
-        
-        const result = await response.json();
-        if (result.success) {
-            showSuccess('Подписка успешно удалена');
-            // Перезагружаем данные
-            if (currentAttendanceGroup) {
-                showGroupStudents(currentAttendanceGroup.id, currentAttendanceGroup.name);
-            } else {
-                loadStudentsData();
-            }
-        } else {
-            showError('Ошибка удаления подписки: ' + result.error);
-        }
-    } catch (error) {
-        console.error('Ошибка удаления подписки:', error);
-        showError('Ошибка удаления подписки');
-    }
-}
-
-// Сохранение посещаемости
 async function saveAttendance() {
     const participants = [];
-    const participantItems = document.querySelectorAll('.participant-item');
-    
-    participantItems.forEach(item => {
-        const participantId = parseInt(item.querySelector('.toggle-switch').getAttribute('onclick').match(/\d+/)[0]);
-        const isPresent = item.querySelector('.toggle-switch').classList.contains('active');
+    document.querySelectorAll('.participant-item').forEach(item => {
+        const toggle = item.querySelector('.toggle-switch');
+        const idMatch = toggle.getAttribute('onclick').match(/\d+/);
+        const pid = idMatch ? parseInt(idMatch[0]) : null;
+        const isPresent = toggle.classList.contains('active');
         const absenceReason = item.getAttribute('data-absence-reason') || 'unexcused';
-        
-        participants.push({
-            id: participantId,
-            is_present: isPresent,
-            absence_reason: isPresent ? null : absenceReason
-        });
+        participants.push({ id: pid, is_present: isPresent, absence_reason: isPresent ? null : absenceReason });
     });
-    
     try {
-        const response = await fetch('/api/admin/attendance/save', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                attendance_id: currentAttendanceId,
-                participants: participants
-            })
-        });
-        
-        const result = await response.json();
-        if (result.success) {
-            showSuccess('Посещаемость сохранена! Уведомления отправлены родителям.');
+        const resp = await fetch('/api/admin/attendance/save', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ attendance_id: window.currentAttendanceId, participants }) });
+        const data = await resp.json();
+        if (data.success) {
+            showSuccess('Посещаемость сохранена!');
             closeModal('attendanceRecordModal');
-            // Возвращаемся к списку дат
-            selectAttendanceGroup(currentAttendanceGroup.id, currentAttendanceGroup.name);
+            selectAttendanceGroup(window.currentAttendanceGroup.id, window.currentAttendanceGroup.name);
         } else {
-            showError('Ошибка сохранения посещаемости: ' + result.error);
+            showError('Ошибка сохранения посещаемости: ' + data.error);
         }
-    } catch (error) {
-        console.error('Ошибка сохранения посещаемости:', error);
+    } catch (e) {
+        console.error('Ошибка сохранения посещаемости', e);
         showError('Ошибка сохранения посещаемости');
     }
 }
 
-// Загрузка статистики посещаемости группы
+// Статистика посещаемости
 async function loadAttendanceStats(groupId) {
     try {
-        // Если мы не в контексте выбора группы, нужно получить информацию о группе
-        if (!currentAttendanceGroup || currentAttendanceGroup.id !== groupId) {
-            const groupResponse = await fetch('/api/admin/attendance/groups');
-            const groupResult = await groupResponse.json();
-            if (groupResult.success) {
-                const group = groupResult.groups.find(g => g.id === groupId);
-                if (group) {
-                    currentAttendanceGroup = { id: groupId, name: group.name };
-                }
-            }
-        }
-        
-        const response = await fetch(`/api/admin/attendance/stats/${groupId}`);
-        const result = await response.json();
-        
-        if (result.success) {
-            renderAttendanceStats(result.stats);
-            closeModal('attendanceModal');
-            closeModal('attendanceDateModal');
-            showModal('attendanceStatsModal');
+        const resp = await fetch(`/api/admin/attendance/stats/${groupId}`);
+        const data = await resp.json();
+        if (data.success) {
+            const html = `
+                <div class="modal" id="attendanceStatsModal" style="display:block;">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3 class="modal-title">Статистика посещаемости</h3>
+                            <button class="close-btn" onclick="closeModal('attendanceStatsModal')">&times;</button>
+                        </div>
+                        <div class="modal-body" id="attendanceStatsContent"></div>
+                    </div>
+                </div>`;
+            document.body.insertAdjacentHTML('beforeend', html);
+            renderAttendanceStats(data.stats);
         } else {
-            showError('Ошибка загрузки статистики: ' + result.error);
+            showError('Ошибка загрузки статистики: ' + data.error);
         }
-    } catch (error) {
-        console.error('Ошибка загрузки статистики:', error);
+    } catch (e) {
+        console.error('Ошибка загрузки статистики', e);
         showError('Ошибка загрузки статистики');
     }
 }
 
-// Отображение статистики посещаемости
 function renderAttendanceStats(stats) {
     const container = document.getElementById('attendanceStatsContent');
-    
-    if (stats.length === 0) {
+    if (!container) return;
+    if (!stats || stats.length === 0) {
         container.innerHTML = '<div class="error">Нет данных о посещаемости</div>';
         return;
     }
-
-    container.innerHTML = `
-        <div style="margin-bottom: 16px;">
-            <button class="back-btn" onclick="closeModal('attendanceStatsModal'); showModal('attendanceModal');">
-                ← Назад к группам
-            </button>
-            <h4 style="margin-bottom: 8px; color: #ffffff;">Статистика посещаемости</h4>
-            <p style="color: #9ca3af; font-size: 13px; margin-bottom: 12px;">${currentAttendanceGroup.name}</p>
-        </div>
-        ${stats.map(stat => {
-            const percentageClass = stat.percentage >= 80 ? 'high' : stat.percentage >= 60 ? 'medium' : 'low';
-            return `
-                <div class="stats-item">
-                    <div class="stats-header">
-                        <div class="stats-date">${stat.day_name} ${new Date(stat.date).toLocaleDateString('ru-RU')}</div>
-                        <div class="stats-percentage ${percentageClass}">${stat.percentage}%</div>
-                    </div>
-                    <div class="stats-details">
-                        <span>Всего: ${stat.total}</span>
-                        <span>Присутствовало: ${stat.present}</span>
-                        <span>Отсутствовало: ${stat.absent}</span>
-                    </div>
-                </div>
-            `;
-        }).join('')}
-    `;
-}
-
-// Загрузка посещаемости для родителя
-async function loadParentAttendance() {
-    try {
-        // Получаем список участников пользователя
-        const response = await fetch('/api/participants');
-        const result = await response.json();
-        
-        if (result.success && result.participants.length > 0) {
-            renderParentAttendanceParticipants(result.participants);
-        } else {
-            document.getElementById('parentAttendanceContent').innerHTML = 
-                '<div class="error">У вас нет зарегистрированных участников</div>';
-        }
-    } catch (error) {
-        console.error('Ошибка загрузки участников родителя:', error);
-        showError('Ошибка загрузки данных');
-    }
-}
-
-// Отображение участников для родителя
-function renderParentAttendanceParticipants(participants) {
-    const container = document.getElementById('parentAttendanceContent');
-    
-    container.innerHTML = `
-        <div style="margin-bottom: 16px;">
-            <h4 style="margin-bottom: 8px; color: #ffffff;">Выберите участника для просмотра посещаемости:</h4>
-        </div>
-        ${participants.map(participant => `
-            <div class="attendance-group" onclick="loadParticipantAttendance(${participant.id}, '${participant.full_name}')">
-                <h4 style="margin-bottom: 4px; color: #ffffff;">${participant.full_name}</h4>
-                <p style="color: #9ca3af; font-size: 13px;">Нажмите для просмотра посещаемости</p>
-            </div>
-        `).join('')}
-    `;
-}
-
-// Загрузка посещаемости конкретного участника
-async function loadParticipantAttendance(participantId, participantName) {
-    try {
-        const response = await fetch(`/api/parent/attendance/${participantId}`);
-        const result = await response.json();
-        
-        if (result.success) {
-            renderParticipantAttendance(result.stats, participantName);
-            closeModal('parentAttendanceModal');
-            showModal('attendanceStatsModal');
-        } else {
-            showError('Ошибка загрузки посещаемости: ' + result.error);
-        }
-    } catch (error) {
-        console.error('Ошибка загрузки посещаемости участника:', error);
-        showError('Ошибка загрузки посещаемости');
-    }
-}
-
-// Отображение посещаемости участника
-function renderParticipantAttendance(stats, participantName) {
-    const container = document.getElementById('attendanceStatsContent');
-    
-    if (stats.length === 0) {
-        container.innerHTML = '<div class="error">Нет данных о посещаемости</div>';
-        return;
-    }
-
-    container.innerHTML = `
-        <div style="margin-bottom: 16px;">
-            <button class="back-btn" onclick="closeModal('attendanceStatsModal'); showModal('parentAttendanceModal');">
-                ← Назад к участникам
-            </button>
-            <h4 style="margin-bottom: 8px; color: #ffffff;">Посещаемость</h4>
-            <p style="color: #9ca3af; font-size: 13px; margin-bottom: 12px;">${participantName}</p>
-        </div>
-        ${stats.map(stat => `
+    container.innerHTML = stats.map(stat => {
+        const cls = stat.percentage >= 80 ? 'high' : stat.percentage >= 60 ? 'medium' : 'low';
+        return `
             <div class="stats-item">
                 <div class="stats-header">
                     <div class="stats-date">${stat.day_name} ${new Date(stat.date).toLocaleDateString('ru-RU')}</div>
-                    <div class="attendance-status ${stat.is_present ? 'present' : 'absent'}">
-                        ${stat.is_present ? '✅ Присутствовал' : '❌ Отсутствовал'}
-                    </div>
+                    <div class="stats-percentage ${cls}">${stat.percentage}%</div>
                 </div>
                 <div class="stats-details">
-                    <span>Группа: ${stat.sport_group}</span>
-                    <span>Время: ${stat.start_time} - ${stat.end_time}</span>
+                    <span>Всего: ${stat.total}</span>
+                    <span>Присутствовало: ${stat.present}</span>
+                    <span>Отсутствовало: ${stat.absent}</span>
                 </div>
-            </div>
-        `).join('')}
-    `;
+            </div>`;
+    }).join('');
 }
 
-// ===== ФУНКЦИИ ДЛЯ АВТОРИЗАЦИИ =====
-
-// Загрузка авторизованных участников
+// ===== Авторизация родителей и абонементы =====
 async function loadAuthorizedParticipants() {
     try {
-        const response = await fetch('/api/auth/participants');
-        const result = await response.json();
-        
+        const resp = await fetch('/api/auth/participants');
+        const data = await resp.json();
         const container = document.getElementById('authorizedParticipants');
-        if (result.success) {
-            if (result.participants.length > 0) {
+        if (!container) return;
+        if (data.success) {
+            if ((data.participants||[]).length > 0) {
                 container.innerHTML = `
                     <h4 style="margin-bottom: 8px; color: #ffffff;">Ваши авторизованные участники:</h4>
-                    ${result.participants.map(participant => `
+                    ${data.participants.map(p => `
                         <div class="authorized-participant">
-                            <h5>${participant.full_name}</h5>
-                            <p>Телефон: ${participant.parent_phone}</p>
-                            <p>Авторизован: ${participant.authorized_at}</p>
-                        </div>
-                    `).join('')}
-                `;
-                
-                // Показываем кнопки оплаты и посещаемости
+                            <h5>${p.full_name}</h5>
+                            <p>Телефон: ${p.parent_phone}</p>
+                            <p>Авторизован: ${p.authorized_at}</p>
+                        </div>`).join('')}`;
                 showAuthorizedButtons();
             } else {
                 container.innerHTML = `
-                    <h4 style="margin-bottom: 8px; color: #ffffff;">Ваши авторизованные участники:</h4>
-                    <p style="color: #9ca3af;">У вас пока нет авторизованных участников</p>
-                `;
-                
-                // Скрываем кнопки оплаты и посещаемости
+                    <h4 style="margin-bottom:8px; color:#ffffff;">Ваши авторизованные участники:</h4>
+                    <p style="color:#9ca3af;">У вас пока нет авторизованных участников</p>`;
                 hideAuthorizedButtons();
             }
         } else {
             container.innerHTML = '<div class="error">Ошибка загрузки участников</div>';
         }
-    } catch (error) {
-        console.error('Ошибка загрузки авторизованных участников:', error);
-        document.getElementById('authorizedParticipants').innerHTML = '<div class="error">Ошибка загрузки данных</div>';
+    } catch (e) {
+        console.error('Ошибка загрузки авторизованных участников', e);
+        const container = document.getElementById('authorizedParticipants');
+        if (container) container.innerHTML = '<div class="error">Ошибка загрузки данных</div>';
     }
 }
 
-// Показать кнопки для авторизованных пользователей
 function showAuthorizedButtons() {
     const paymentBtn = document.getElementById('paymentBtn');
     const attendanceBtn = document.getElementById('attendanceBtn');
-    const transferBtn = document.getElementById('transferBtn');
-    
     if (paymentBtn) paymentBtn.style.display = 'inline-block';
     if (attendanceBtn) attendanceBtn.style.display = 'inline-block';
-    if (transferBtn) transferBtn.style.display = 'inline-block';
 }
 
-// Скрыть кнопки для авторизованных пользователей
 function hideAuthorizedButtons() {
     const paymentBtn = document.getElementById('paymentBtn');
     const attendanceBtn = document.getElementById('attendanceBtn');
-    const transferBtn = document.getElementById('transferBtn');
-    
     if (paymentBtn) paymentBtn.style.display = 'none';
     if (attendanceBtn) attendanceBtn.style.display = 'none';
-    if (transferBtn) transferBtn.style.display = 'none';
 }
 
-// Обработчик формы авторизации
-document.getElementById('authorizationForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
-    const code = document.getElementById('authCode').value.trim();
-    
-    if (code.length !== 6) {
-        showError('Код должен содержать 6 цифр');
-        return;
-    }
-    
-    try {
-        const response = await fetch('/api/auth/verify', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ code: code })
-        });
-        
-        const result = await response.json();
-        if (result.success) {
-            showSuccess(result.message);
-            this.reset();
-            loadAuthorizedParticipants(); // Перезагружаем список участников
-        } else {
-            showError('Ошибка авторизации: ' + result.error);
+(function bindAuthorizationForm(){
+    const form = document.getElementById('authorizationForm');
+    if (!form) return;
+    form.addEventListener('submit', async function(e){
+        e.preventDefault();
+        const code = document.getElementById('authCode').value.trim();
+        if (code.length !== 6) { showError('Код должен содержать 6 цифр'); return; }
+        try {
+            const resp = await fetch('/api/auth/verify', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ code })});
+            const data = await resp.json();
+            if (data.success) {
+                showSuccess(data.message);
+                form.reset();
+                loadAuthorizedParticipants();
+            } else {
+                showError('Ошибка авторизации: ' + data.error);
+            }
+        } catch (e) {
+            console.error('Ошибка авторизации', e);
+            showError('Ошибка авторизации');
         }
-    } catch (error) {
-        console.error('Ошибка авторизации:', error);
-        showError('Ошибка авторизации');
-    }
-});
+    });
+})();
 
-// Проверка авторизации при загрузке приложения
 async function checkAuthorization() {
     try {
-        const response = await fetch('/api/auth/participants');
-        const result = await response.json();
-        
-        if (result.success && result.participants.length > 0) {
+        const resp = await fetch('/api/auth/participants');
+        const data = await resp.json();
+        if (data.success && (data.participants||[]).length > 0) {
             showAuthorizedButtons();
         } else {
             hideAuthorizedButtons();
         }
-    } catch (error) {
-        console.error('Ошибка проверки авторизации:', error);
+    } catch (e) {
+        console.error('Ошибка проверки авторизации', e);
         hideAuthorizedButtons();
     }
 }
 
-// Загрузка групп для регистрации участников
 function loadParticipantGroups() {
-    const participantGroupSelect = document.getElementById('participantGroup');
-    if (participantGroupSelect && sportGroups.length > 0) {
-        participantGroupSelect.innerHTML = '<option value="">Выберите группу</option>' +
-            sportGroups.map(group => `<option value="${group.id}">${group.name}</option>`).join('');
+    const select = document.getElementById('participantGroup');
+    if (select && Array.isArray(sportGroups) && sportGroups.length>0) {
+        select.innerHTML = '<option value="">Выберите группу</option>' + sportGroups.map(g => `<option value="${g.id}">${g.name}</option>`).join('');
     }
 }
 
-// ===== ФУНКЦИИ ДЛЯ УЧЕТА ФИНАНСОВ =====
-
-// Загрузка финансовой информации для родителя
-async function loadFinancialInfo() {
+// ===== Операции с группами (админ) =====
+async function updateSportGroups() {
     try {
-        const response = await fetch('/api/parent/financial-info');
-        const result = await response.json();
-        
-        const container = document.getElementById('financialInfo');
-        if (result.success) {
-            if (result.financial_data.length > 0) {
-                container.innerHTML = `
-                    <h4 style="margin-bottom: 12px; color: #ffffff;">Финансовая информация:</h4>
-                    ${result.financial_data.map(participant => `
-                        <div class="financial-info">
-                            <div class="financial-header">
-                                <div class="participant-name">${participant.participant_name}</div>
-                            </div>
-                            ${participant.subscriptions.map(subscription => `
-                                <div class="balance-info">
-                                    <span>Группа: ${subscription.sport_group_name}</span>
-                                    <span>Тип: ${subscription.subscription_type}</span>
-                                    <span>Осталось: <span class="balance-remaining ${getBalanceClass(subscription.remaining_lessons)}">${subscription.remaining_lessons}</span></span>
-                                    <span>Оплачено: ${subscription.total_paid} ₽</span>
-                                </div>
-                            `).join('')}
-                        </div>
-                    `).join('')}
-                `;
-            } else {
-                container.innerHTML = `
-                    <h4 style="margin-bottom: 12px; color: #ffffff;">Финансовая информация:</h4>
-                    <p style="color: #9ca3af;">Нет данных о подписках</p>
-                `;
-            }
+        if (!confirm('Вы уверены, что хотите обновить спортивные группы?')) return;
+        const resp = await fetch('/api/admin/update-sport-groups', { method:'POST', headers:{'Content-Type':'application/json'} });
+        const data = await resp.json();
+        if (data.success) {
+            showSuccess('Спортивные группы успешно обновлены!');
+            await loadSportGroups();
         } else {
-            container.innerHTML = '<div class="error">Ошибка загрузки финансовой информации</div>';
+            showError('Ошибка при обновлении групп: ' + data.error);
         }
-    } catch (error) {
-        console.error('Ошибка загрузки финансовой информации:', error);
-        document.getElementById('financialInfo').innerHTML = '<div class="error">Ошибка загрузки данных</div>';
+    } catch (e) {
+        console.error('Ошибка при обновлении групп', e);
+        showError('Ошибка при обновлении спортивных групп');
     }
 }
 
-// Получить CSS класс для баланса
-function getBalanceClass(remaining) {
-    if (remaining <= 1) return 'low';
-    if (remaining <= 3) return 'medium';
-    return 'high';
+async function resetSportGroups() {
+    try {
+        if (!confirm('⚠️ ВНИМАНИЕ! Это действие удалит ВСЕ существующие спортивные группы и создаст их заново. Продолжить?')) return;
+        const resp = await fetch('/api/admin/reset-sport-groups', { method:'POST', headers:{'Content-Type':'application/json'} });
+        const data = await resp.json();
+        if (data.success) {
+            showSuccess('Спортивные группы успешно сброшены и пересозданы!');
+            await loadSportGroups();
+        } else {
+            showError('Ошибка при сбросе групп: ' + data.error);
+        }
+    } catch (e) {
+        console.error('Ошибка при сбросе групп', e);
+        showError('Ошибка при сбросе спортивных групп');
+    }
 }
 
-// Проверка низкого баланса (для администратора)
 async function checkLowBalance() {
     try {
-        const response = await fetch('/api/admin/check-low-balance');
-        const result = await response.json();
-        
-        if (result.success) {
-            showSuccess(`Проверка завершена! Отправлено ${result.notifications_sent} уведомлений. Найдено ${result.low_balance_count} участников с низким балансом.`);
+        const resp = await fetch('/api/admin/check-low-balance');
+        const data = await resp.json();
+        if (data.success) {
+            showSuccess(`Проверка завершена! Отправлено ${data.notifications_sent} уведомлений. Найдено ${data.low_balance_count} участников с низким балансом.`);
         } else {
-            showError('Ошибка проверки балансов: ' + result.error);
+            showError('Ошибка проверки балансов: ' + data.error);
         }
-    } catch (error) {
-        console.error('Ошибка проверки балансов:', error);
+    } catch (e) {
+        console.error('Ошибка проверки балансов', e);
         showError('Ошибка проверки балансов');
     }
 }
 
-// Загрузка участников группы с финансовой информацией (для администратора)
-async function loadGroupParticipants(groupId) {
+// ===== Посещаемость родителя =====
+async function loadParentAttendance() {
     try {
-        const response = await fetch(`/api/admin/group/${groupId}/participants`);
-        const result = await response.json();
-        
-        if (result.success) {
-            return result.participants;
+        const resp = await fetch('/api/participants');
+        const data = await resp.json();
+        const container = document.getElementById('parentAttendanceContent');
+        if (!container) return;
+        if (data.success && (data.participants||[]).length>0) {
+            container.innerHTML = `
+                <div style="margin-bottom:16px;"><h4 style="margin-bottom:8px; color:#ffffff;">Выберите участника для просмотра посещаемости:</h4></div>
+                ${data.participants.map(p => `
+                    <div class="attendance-group" onclick="loadParticipantAttendance(${p.id}, '${p.full_name.replace(/'/g, "\'")}')">
+                        <h4 style="margin-bottom:4px; color:#ffffff;">${p.full_name}</h4>
+                        <p style="color:#9ca3af; font-size:13px;">Нажмите для просмотра посещаемости</p>
+                    </div>`).join('')}`;
         } else {
-            showError('Ошибка загрузки участников группы: ' + result.error);
-            return [];
+            container.innerHTML = '<div class="error">У вас нет зарегистрированных участников</div>';
         }
-    } catch (error) {
-        console.error('Ошибка загрузки участников группы:', error);
-        showError('Ошибка загрузки участников группы');
-        return [];
+    } catch (e) {
+        console.error('Ошибка загрузки участников родителя', e);
+        showError('Ошибка загрузки данных');
     }
 }
 
-// Обновляем функцию openGroupDetails для отображения участников
+async function loadParticipantAttendance(participantId, participantName) {
+    try {
+        const resp = await fetch(`/api/parent/attendance/${participantId}`);
+        const data = await resp.json();
+        if (data.success) {
+            const html = `
+                <div class="modal" id="attendanceStatsModal" style="display:block;">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3 class="modal-title">Посещаемость</h3>
+                            <button class="close-btn" onclick="closeModal('attendanceStatsModal')">&times;</button>
+                        </div>
+                        <div class="modal-body" id="attendanceStatsContent"></div>
+                    </div>
+                </div>`;
+            document.body.insertAdjacentHTML('beforeend', html);
+            renderParticipantAttendance(data.stats, participantName);
+            closeModal('parentAttendanceModal');
+        } else {
+            showError('Ошибка загрузки посещаемости: ' + data.error);
+        }
+    } catch (e) {
+        console.error('Ошибка загрузки посещаемости участника', e);
+        showError('Ошибка загрузки посещаемости');
+    }
+}
+
+function renderParticipantAttendance(stats, participantName) {
+    const container = document.getElementById('attendanceStatsContent');
+    if (!container) return;
+    if (!stats || stats.length === 0) {
+        container.innerHTML = '<div class="error">Нет данных о посещаемости</div>';
+        return;
+    }
+    container.innerHTML = `
+        <div style="margin-bottom:16px;">
+            <button class="back-btn" onclick="closeModal('attendanceStatsModal'); showModal('parentAttendanceModal');">← Назад к участникам</button>
+            <h4 style="margin-bottom:8px; color:#ffffff;">Посещаемость</h4>
+            <p style="color:#9ca3af; font-size:13px; margin-bottom:12px;">${participantName}</p>
+        </div>
+        ${stats.map(stat => `
+            <div class="stats-item">
+                <div class="stats-header">
+                    <div class="stats-date">${stat.day_name} ${new Date(stat.date).toLocaleDateString('ru-RU')}</div>
+                    <div class="attendance-status ${stat.is_present ? 'present' : 'absent'}">${stat.is_present ? '✅ Присутствовал' : '❌ Отсутствовал'}</div>
+                </div>
+                <div class="stats-details"><span>Группа: ${stat.sport_group}</span><span>Время: ${stat.start_time} - ${stat.end_time}</span></div>
+            </div>`).join('')}`;
+}
+
+// ===== Вспомогательные =====
+function getDayName(day) {
+    const days = ['Понедельник','Вторник','Среда','Четверг','Пятница','Суббота','Воскресенье'];
+    return days[day] || '';
+}
+
+function showSuccess(message) { try { tg.showAlert(message); } catch(e) { alert(message); } }
+function showError(message) { try { tg.showAlert(message); } catch(e) { alert(message); } }
+
+// ===== Карточка группы (подробности и запись) =====
 async function openGroupDetails(groupId) {
     try {
-        // Получаем участников группы
-        const participants = await loadGroupParticipants(groupId);
-        
-        // Переходим на страницу с подробной информацией о группе
-        window.location.href = `/group/${groupId}?id=${groupId}`;
-        
-        // Сохраняем данные участников в localStorage для использования на странице группы
-        localStorage.setItem('groupParticipants', JSON.stringify(participants));
-    } catch (error) {
-        console.error('Ошибка загрузки данных группы:', error);
-        window.location.href = `/group/${groupId}?id=${groupId}`;
+        let group = sportGroups.find(g => g.id === groupId);
+        if (!group) {
+            const resp = await fetch(`/api/sport-group/${groupId}`);
+            const data = await resp.json();
+            if (data && data.success && data.group) {
+                group = {
+                    id: data.group.id,
+                    name: data.group.name,
+                    description: data.group.description,
+                    detailed_description: data.group.detailed_description,
+                    trainer_name: data.group.trainer_name,
+                    trainer_info: data.group.trainer_info,
+                    price_8: data.group.price_8,
+                    price_12: data.group.price_12,
+                    price_single: data.group.price_single,
+                    category: data.group.category,
+                    age_group: data.group.age_group,
+                    schedule: data.group.schedule_text
+                };
+            }
+        }
+        if (group) {
+            showGroupInfoModal(group);
+        } else {
+            showError('Не удалось загрузить информацию о группе');
+        }
+    } catch (e) {
+        console.error('Ошибка открытия деталей группы:', e);
+        showError('Ошибка открытия деталей группы');
+    }
+}
+
+function showGroupInfoModal(group) {
+    const scheduleText = group.schedule || group.schedule_text || '';
+    const html = `
+        <div class="modal" id="groupInfoModal" style="display:block;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title">🏋️ ${group.name}</h3>
+                    <button class="close-btn" onclick="closeGroupInfoModal()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="group-info">
+                        <p>${group.description || ''}</p>
+                        ${group.detailed_description ? `<p>${group.detailed_description}</p>` : ''}
+                        ${scheduleText ? `<div class="schedule-info"><strong>Расписание:</strong> ${scheduleText}</div>` : ''}
+                        <div class="prices">
+                            <h4>Стоимость:</h4>
+                            ${group.price_8 ? `<div>8 занятий: ${group.price_8} ₽</div>` : ''}
+                            ${group.price_12 ? `<div>12 занятий: ${group.price_12} ₽</div>` : ''}
+                            ${group.price_single ? `<div>Разовое занятие: ${group.price_single} ₽</div>` : ''}
+                        </div>
+                        ${group.trainer_name ? `
+                            <div class="trainer-info">
+                                <h4>Тренер:</h4>
+                                <p><strong>${group.trainer_name}</strong></p>
+                                ${group.trainer_info ? `<p>${group.trainer_info}</p>` : ''}
+                            </div>
+                        ` : ''}
+                        <div class="group-actions">
+                            <button class="btn" onclick="requestEnroll(${group.id}, '${(group.name||'').replace(/'/g, "\'")}')">Записаться в эту группу</button>
+                            <button class="btn secondary" onclick="openContacts()">📞 Контакты</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+    document.body.insertAdjacentHTML('beforeend', html);
+}
+
+function closeGroupInfoModal() {
+    const modal = document.getElementById('groupInfoModal');
+    if (modal) modal.remove();
+}
+
+async function requestEnroll(groupId, groupName) {
+    try {
+        const resp = await fetch('/api/enroll-request', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ group_id: groupId, group_name: groupName }) });
+        const data = await resp.json();
+        if (data.success) {
+            showSuccess('Заявка отправлена администратору');
+            closeGroupInfoModal();
+        } else {
+            showError('Не удалось отправить заявку: ' + data.error);
+        }
+    } catch (e) {
+        console.error('Ошибка отправки заявки', e);
+        showError('Ошибка отправки заявки');
+    }
+}
+
+// ===== Контакты (динамическое окно) =====
+async function openContacts() {
+    let phone = '+7 902 923 7193';
+    let tgUser = 'Taiky_admin';
+    let name = 'Директор клуба';
+    try {
+        const resp = await fetch('/api/parent/contact');
+        const data = await resp.json();
+        if (data?.success && data.contact_info) {
+            phone = data.contact_info.phone || phone;
+            tgUser = (data.contact_info.telegram || tgUser).replace(/^@/, '');
+            name = data.contact_info.name || name;
+        }
+    } catch (e) { console.warn('Не удалось загрузить контактные данные', e); }
+    const html = `
+        <div class="modal" id="dynamicContactModal" style="display:block;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title">Контакты</h3>
+                    <button class="close-btn" onclick="closeDynamicContacts()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="group-info">
+                        <h4>Директор клуба</h4>
+                        <p>
+                            ${name}
+                        </p>
+                        <div style="margin-top: 16px; display:flex; gap:12px; flex-wrap:wrap;">
+                            <button class="btn" onclick="callPhone('${phone}')">📞 Позвонить</button>
+                            <button class="btn btn-secondary" onclick="openTelegram('${tgUser}')">✈️ Телеграм</button>
+                        </div>
+                        <div style="margin-top:12px; color: var(--text-secondary);">
+                            <div>Телефон: ${phone}</div>
+                            <div>Telegram: @${tgUser}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+    document.body.insertAdjacentHTML('beforeend', html);
+}
+
+function closeDynamicContacts() {
+    const modal = document.getElementById('dynamicContactModal');
+    if (modal) modal.remove();
+}
+
+function callPhone(phone) {
+    window.location.href = `tel:${phone.replace(/\s|\(|\)|-/g, '')}`;
+}
+
+function openTelegram(username) {
+    // Prefer native Telegram app if installed; fall back to web
+    const tgLink = `https://t.me/${username.replace(/^@/, '')}`;
+    window.open(tgLink, '_blank');
+}
+
+function openGroupAttendance(groupId, groupName) {
+    // Переиспользуем существующий поток посещаемости, сразу выбирая группу
+    window.currentAttendanceGroup = { id: groupId, name: groupName };
+    // Загружаем даты посещаемости для группы
+    selectAttendanceGroup(groupId, groupName);
+}
+
+async function openPaymentsForGroup(groupId, groupName) {
+    try {
+        const resp = await fetch('/api/admin/payments');
+        const data = await resp.json();
+        if (!data.success) { showError('Не удалось загрузить платежи'); return; }
+        const groupPayments = (data.payments || []).filter(p => String(p.group_id) === String(groupId) || p.sport_group === groupName);
+        const html = `
+            <div class="modal" id="groupPaymentsModal" style="display:block;">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 class="modal-title">💰 Платежи группы: ${groupName}</h3>
+                        <button class="close-btn" onclick="closeModal('groupPaymentsModal')">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        ${groupPayments.length === 0 ? '<p>Платежей пока нет</p>' : groupPayments.map(p => `
+                            <div class="schedule-item payment-item ${p.status}">
+                                <div class="payment-header">
+                                    <div class="payment-participant">${p.participant_name}</div>
+                                    <div class="payment-status ${p.status}">${getStatusText(p.status)}</div>
+                                </div>
+                                <div class="payment-details">
+                                    <div>📱 ${p.participant_phone || ''}</div>
+                                    <div>🏃‍♂️ ${p.sport_group} — ${p.subscription_type}</div>
+                                    <div>💰 ${p.amount} ₽ (${p.payment_method})</div>
+                                    <div>📅 Создан: ${p.created_at}</div>
+                                    ${p.payment_date ? `<div>✅ Подтвержден: ${p.payment_date}</div>` : ''}
+                                    ${p.admin_notes ? `<div>📝 Заметка: ${p.admin_notes}</div>` : ''}
+                                </div>
+                                ${p.status === 'pending' ? `
+                                    <div class="payment-actions">
+                                        <button class="btn btn-success" onclick="approvePayment(${p.id})">✅ Подтвердить</button>
+                                        <button class="btn btn-danger" onclick="rejectPayment(${p.id})">❌ Отклонить</button>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>`;
+        document.body.insertAdjacentHTML('beforeend', html);
+    } catch (e) {
+        console.error(e);
+        showError('Ошибка загрузки платежей');
     }
 }

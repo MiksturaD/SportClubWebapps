@@ -39,3 +39,8 @@ class Config:
         'Скидка за реферала',
         'Сезонная скидка'
     ]
+    
+    # Admin contact info
+    ADMIN_CONTACT_NAME = os.environ.get('ADMIN_CONTACT_NAME', 'Галоян Пайлак Араратович')
+    ADMIN_CONTACT_PHONE = os.environ.get('ADMIN_CONTACT_PHONE', '+7 902 923 7193')
+    ADMIN_CONTACT_TELEGRAM = os.environ.get('ADMIN_CONTACT_TELEGRAM', 'Taiky_admin')  # username без @

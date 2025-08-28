@@ -11,3 +11,8 @@ TELEGRAM_WEBAPP_URL=https://your-domain.ngrok.io
 
 # Admin Telegram ID (замените на реальный ID администратора)
 ADMIN_TELEGRAM_ID=123456789
+
+# Admin contact info
+ADMIN_CONTACT_NAME="Галоян Пайлак Араратович"
+ADMIN_CONTACT_PHONE="+7 902 923 7193"
+ADMIN_CONTACT_TELEGRAM=Taiky_admin

@@ -29,85 +29,295 @@ def create_app():
 def init_sport_groups():
     """Инициализация спортивных групп при первом запуске"""
     if SportGroup.query.count() == 0:
-        groups = [
-            {
-                'name': 'Дзюдо младшая группа', 
-                'description': 'Группа для детей 5-7 лет',
-                'detailed_description': 'Дзюдо для самых маленьких! Наши занятия направлены на развитие координации, гибкости и дисциплины у детей дошкольного возраста. В игровой форме дети изучают основы дзюдо, учатся работать в команде и развивают уверенность в себе.',
-                'price_8': 4000, 
-                'price_12': 5000,
-                'price_single': 700,
-                'trainer_name': 'Галоян Пайлак Араратович',
-                'trainer_info': 'Является мастером спорта международного класса по дзюдо ' 
-                                'Многократный призёр и чемпион чемпионатов России , 8 кратный медалист кубков Европы , бронзовый призер первенства Европы ' 
-                                'Имеет педагогическое,юридическое образование '
-                                'В основу ставит спортивную дисциплину  уважение к старшим '
-                                'Опыт работы более 4 лет'
-            },
-            {
-                'name': 'Дзюдо старшая группа', 
-                'description': 'Группа для детей 7 лет и старше',
-                'detailed_description': 'Серьезные тренировки по дзюдо для детей школьного возраста. Программа включает изучение техники, участие в соревнованиях, развитие физических качеств и спортивного характера.',
-                'price_8': 4000,
-                'price_12': 5000,
-                'price_single': 700,
-                'trainer_name': 'Галоян Пайлак Араратович',
-                'trainer_info': 'Является мастером спорта международного класса по дзюдо ' 
-                                'Многократный призёр и чемпион чемпионатов России , 8 кратный медалист кубков Европы , бронзовый призер первенства Европы ' 
-                                'Имеет педагогическое,юридическое образование '
-                                'В основу ставит спортивную дисциплину  уважение к старшим '
-                                'Опыт работы более 4 лет'
-            },
-            {
-                'name': 'Гимнастика', 
-                'description': 'Группа детей от 3х до 10 лет', 
-                'detailed_description': 'Художественная гимнастика для девочек - это красота, грация и сила! Занятия включают растяжку, элементы акробатики, работу с предметами (лента, мяч, обруч).',
-                'price_8': 4000,
-                'price_12': 5000,
-                'price_single': 700,
-                'trainer_name': 'Галоян Пайлак Араратович',
-                'trainer_info': 'Является мастером спорта международного класса по дзюдо ' 
-                                'Многократный призёр и чемпион чемпионатов России , 8 кратный медалист кубков Европы , бронзовый призер первенства Европы ' 
-                                'Имеет педагогическое,юридическое образование '
-                                'В основу ставит спортивную дисциплину  уважение к старшим '
-                                'Опыт работы более 4 лет'
-            },
-            {
-                'name': 'ММА', 
-                'description': 'Смешанные единоборства для подростков от 14+ и взрослых',
-                'detailed_description': 'Современные смешанные единоборства (MMA) - это сочетание различных боевых искусств. Тренировки включают ударную технику, борьбу, работу в партере.',
-                'price_8': 4000,
-                'price_12': 5000,
-                'price_single': 900,
-                'trainer_name': 'Галоян Пайлак Араратович',
-                'trainer_info': 'Является мастером спорта международного класса по дзюдо ' 
-                                'Многократный призёр и чемпион чемпионатов России , 8 кратный медалист кубков Европы , бронзовый призер первенства Европы ' 
-                                'Имеет педагогическое,юридическое образование '
-                                'В основу ставит спортивную дисциплину  уважение к старшим '
-                                'Опыт работы более 4 лет'
-            },
-            {
-                'name': 'Женский фитнес', 
-                'description': 'Фитнес программы для женщин', 
-                'detailed_description': 'Специально разработанные программы фитнеса для женщин всех возрастов. Включают кардио-тренировки, силовые упражнения, растяжку и функциональный тренинг.',
-                'price_8': 4000,
-                'price_single': 700,
-                'trainer_name': 'Анна Морозова',
-                'trainer_info': 'Сертифицированный тренер по фитнесу, специалист по женскому здоровью и питанию. Опыт работы в фитнес-индустрии 12 лет.'
-            }
-        ]
-        
-        for group_data in groups:
+        create_sport_groups()
+    else:
+        update_sport_groups()
+
+def create_sport_groups():
+    """Создание новых спортивных групп"""
+    groups = [
+        {
+            'name': 'Дзюдо младшая группа А (4-6 лет)',
+            'description': 'Группа для детей 4-6 лет',
+            'detailed_description': 'Дзюдо для самых маленьких! Наши занятия направлены на развитие координации, гибкости и дисциплины у детей дошкольного возраста. В игровой форме дети изучают основы дзюдо, учатся работать в команде и развивают уверенность в себе. Продолжительность занятия 50 минут. Форма одежды кимано (если нет - шорты, футболка), с собой негазированную питьевую воду 0.5 л объёмом, сменная обувь. Занятия проходят босиком.',
+            'schedule': 'Понедельник, Среда, Пятница с 19:30 до 20:20',
+            'price_8': 4000, 
+            'price_12': 5000,
+            'price_single': 700,
+            'trainer_name': 'Галоян Пайлак Араратович',
+            'trainer_info': 'Является мастером спорта международного класса по дзюдо. Многократный призёр и чемпион чемпионатов России, 8 кратный медалист кубков Европы, бронзовый призер первенства Европы. Имеет педагогическое, юридическое образование. В основу ставит спортивную дисциплину, уважение к старшим. Опыт работы более 4 лет.',
+            'category': 'judo',
+            'age_group': '4-6 лет'
+        },
+        {
+            'name': 'Дзюдо младшая группа Б (4-6 лет)',
+            'description': 'Группа для детей 4-6 лет',
+            'detailed_description': 'Дзюдо для самых маленьких! Наши занятия направлены на развитие координации, гибкости и дисциплины у детей дошкольного возраста. В игровой форме дети изучают основы дзюдо, учатся работать в команде и развивают уверенность в себе. Продолжительность занятия 50 минут. Форма одежды кимано (если нет - шорты, футболка), с собой негазированную питьевую воду 0.5 л объёмом, сменная обувь. Занятия проходят босиком.',
+            'schedule': 'Вторник, Четверг с 18:30 до 19:20, Суббота с 10:00 до 10:50',
+            'price_8': 4000, 
+            'price_12': 5000,
+            'price_single': 700,
+            'trainer_name': 'Галоян Пайлак Араратович',
+            'trainer_info': 'Является мастером спорта международного класса по дзюдо. Многократный призёр и чемпион чемпионатов России, 8 кратный медалист кубков Европы, бронзовый призер первенства Европы. Имеет педагогическое, юридическое образование. В основу ставит спортивную дисциплину, уважение к старшим. Опыт работы более 4 лет.',
+            'category': 'judo',
+            'age_group': '4-6 лет'
+        },
+        {
+            'name': 'Дзюдо старшая группа А (7+ лет)',
+            'description': 'Группа для детей 7 лет и старше',
+            'detailed_description': 'Серьезные тренировки по дзюдо для детей школьного возраста. Программа включает изучение техники, участие в соревнованиях, развитие физических качеств и спортивного характера. Продолжительность занятия 50 минут. Форма одежды кимано (если нет - шорты, футболка), с собой негазированную питьевую воду 0.5 л объёмом, сменная обувь. Занятия проходят босиком.',
+            'schedule': 'Понедельник, Среда, Пятница с 20:30 до 21:20',
+            'price_8': 4000,
+            'price_12': 5000,
+            'price_single': 700,
+            'trainer_name': 'Галоян Пайлак Араратович',
+            'trainer_info': 'Является мастером спорта международного класса по дзюдо. Многократный призёр и чемпион чемпионатов России, 8 кратный медалист кубков Европы, бронзовый призер первенства Европы. Имеет педагогическое, юридическое образование. В основу ставит спортивную дисциплину, уважение к старшим. Опыт работы более 4 лет.',
+            'category': 'judo',
+            'age_group': '7+ лет'
+        },
+        {
+            'name': 'Дзюдо старшая группа Б (7+ лет)',
+            'description': 'Группа для детей 7 лет и старше',
+            'detailed_description': 'Серьезные тренировки по дзюдо для детей школьного возраста. Программа включает изучение техники, участие в соревнованиях, развитие физических качеств и спортивного характера. Продолжительность занятия 50 минут. Форма одежды кимано (если нет - шорты, футболка), с собой негазированную питьевую воду 0.5 л объёмом, сменная обувь. Занятия проходят босиком.',
+            'schedule': 'Понедельник, Среда, Пятница с 10:00 до 10:50',
+            'price_8': 4000,
+            'price_12': 5000,
+            'price_single': 700,
+            'trainer_name': 'Галоян Пайлак Араратович',
+            'trainer_info': 'Является мастером спорта международного класса по дзюдо. Многократный призёр и чемпион чемпионатов России, 8 кратный медалист кубков Европы, бронзовый призер первенства Европы. Имеет педагогическое, юридическое образование. В основу ставит спортивную дисциплину, уважение к старшим. Опыт работы более 4 лет.',
+            'category': 'judo',
+            'age_group': '7+ лет'
+        },
+        {
+            'name': 'Дзюдо старшая группа В (7+ лет)',
+            'description': 'Группа для детей 7 лет и старше',
+            'detailed_description': 'Серьезные тренировки по дзюдо для детей школьного возраста. Программа включает изучение техники, участие в соревнованиях, развитие физических качеств и спортивного характера. Продолжительность занятия 50 минут. Форма одежды кимано (если нет - шорты, футболка), с собой негазированную питьевую воду 0.5 л объёмом, сменная обувь. Занятия проходят босиком.',
+            'schedule': 'Вторник, Четверг с 19:30 до 20:20, Суббота с 11:00 до 11:50',
+            'price_8': 4000,
+            'price_12': 5000,
+            'price_single': 700,
+            'trainer_name': 'Галоян Пайлак Араратович',
+            'trainer_info': 'Является мастером спорта международного класса по дзюдо. Многократный призёр и чемпион чемпионатов России, 8 кратный медалист кубков Европы, бронзовый призер первенства Европы. Имеет педагогическое, юридическое образование. В основу ставит спортивную дисциплину, уважение к старшим. Опыт работы более 4 лет.',
+            'category': 'judo',
+            'age_group': '7+ лет'
+        },
+        {
+            'name': 'Гимнастика (3+ лет)',
+            'description': 'Гимнастика для детей от 3х до 5 лет',
+            'detailed_description': 'Гимнастика - отлично подойдёт для мальчиков и девочек, включающие в общеразвивающие упражнения, с уклоном на растяжку, координацию, статические упражнения. Весь тренировочный процесс контролируется спортивной дисциплиной. Занятия продолжительностью 50 минут, форма одежды (шорты, футболка), с собой теплую воду негазированную и сменную обувь.',
+            'schedule': 'Понедельник, Среда, Пятница с 18:30 до 19:20',
+            'price_8': 4000,
+            'price_12': 5000,
+            'price_single': 700,
+            'trainer_name': 'Галоян Пайлак Араратович',
+            'trainer_info': 'Является мастером спорта международного класса по дзюдо. Многократный призёр и чемпион чемпионатов России, 8 кратный медалист кубков Европы, бронзовый призер первенства Европы. Имеет педагогическое, юридическое образование. В основу ставит спортивную дисциплину, уважение к старшим. Опыт работы более 4 лет.',
+            'category': 'gymnastics',
+            'age_group': '3-5 лет'
+        },
+        {
+            'name': 'ММА (14+ лет)',
+            'description': 'Смешанные единоборства для подростков от 14+ и взрослых',
+            'detailed_description': 'Отлично подойдёт для подростков, которые хотят научится самообороне, принимать участие в соревнованиях и прогрессировать с каждой тренировкой. Для взрослых отлично подойдут занятия для тех, кто всегда мечтал попробовать для себя что-то новое, тренировки в удовольствие, под присмотром грамотного тренерского состава, обучение техническому арсеналу единоборств, развитие выносливости, работа над физической формой.',
+            'schedule': 'Вторник, Четверг с 21:30 до 22:30',
+            'price_8': 4000,
+            'price_12': 5000,
+            'price_single': 900,
+            'trainer_name': 'Галоян Пайлак Араратович',
+            'trainer_info': 'Является мастером спорта международного класса по дзюдо. Многократный призёр и чемпион чемпионатов России, 8 кратный медалист кубков Европы, бронзовый призер первенства Европы. Имеет педагогическое, юридическое образование. В основу ставит спортивную дисциплину, уважение к старшим. Опыт работы более 4 лет.',
+            'category': 'mma',
+            'age_group': '14+ лет'
+        },
+        {
+            'name': 'Женский фитнес (18+ лет)',
+            'description': 'Фитнес программы для женщин', 
+            'detailed_description': 'Специально разработанные программы фитнеса для женщин всех возрастов. Включают кардио-тренировки, силовые упражнения, растяжку и функциональный тренинг.',
+            'schedule': 'Расписание в проработке',
+            'price_8': 4000,
+            'price_single': 700,
+            'trainer_name': 'Анна Морозова',
+            'trainer_info': 'Сертифицированный тренер по фитнесу, специалист по женскому здоровью и питанию. Опыт работы в фитнес-индустрии 12 лет.',
+            'category': 'fitness',
+            'age_group': '18+ лет'
+        }
+    ]
+    
+    for group_data in groups:
+        group = SportGroup(**group_data)
+        db.session.add(group)
+    
+    db.session.commit()
+    print("Спортивные группы созданы успешно!")
+
+def update_sport_groups():
+    """Обновление существующих спортивных групп"""
+    # Получаем все существующие группы
+    existing_groups = SportGroup.query.all()
+    
+    # Создаем словарь для быстрого поиска по имени
+    existing_groups_dict = {group.name: group for group in existing_groups}
+    
+    # Определяем новые/обновленные группы
+    updated_groups = [
+        {
+            'name': 'Дзюдо младшая группа А (4-6 лет)',
+            'description': 'Группа для детей 4-6 лет',
+            'detailed_description': 'Дзюдо для самых маленьких! Наши занятия направлены на развитие координации, гибкости и дисциплины у детей дошкольного возраста. В игровой форме дети изучают основы дзюдо, учатся работать в команде и развивают уверенность в себе. Продолжительность занятия 50 минут. Форма одежды кимано (если нет - шорты, футболка), с собой негазированную питьевую воду 0.5 л объёмом, сменная обувь. Занятия проходят босиком.',
+            'schedule': 'Понедельник, Среда, Пятница с 19:30 до 20:20',
+            'price_8': 4000, 
+            'price_12': 5000,
+            'price_single': 700,
+            'trainer_name': 'Галоян Пайлак Араратович',
+            'trainer_info': 'Является мастером спорта международного класса по дзюдо. Многократный призёр и чемпион чемпионатов России, 8 кратный медалист кубков Европы, бронзовый призер первенства Европы. Имеет педагогическое, юридическое образование. В основу ставит спортивную дисциплину, уважение к старшим. Опыт работы более 4 лет.',
+            'category': 'judo',
+            'age_group': '4-6 лет'
+        },
+        {
+            'name': 'Дзюдо младшая группа Б (4-6 лет)',
+            'description': 'Группа для детей 4-6 лет',
+            'detailed_description': 'Дзюдо для самых маленьких! Наши занятия направлены на развитие координации, гибкости и дисциплины у детей дошкольного возраста. В игровой форме дети изучают основы дзюдо, учатся работать в команде и развивают уверенность в себе. Продолжительность занятия 50 минут. Форма одежды кимано (если нет - шорты, футболка), с собой негазированную питьевую воду 0.5 л объёмом, сменная обувь. Занятия проходят босиком.',
+            'schedule': 'Вторник, Четверг с 18:30 до 19:20, Суббота с 10:00 до 10:50',
+            'price_8': 4000, 
+            'price_12': 5000,
+            'price_single': 700,
+            'trainer_name': 'Галоян Пайлак Араратович',
+            'trainer_info': 'Является мастером спорта международного класса по дзюдо. Многократный призёр и чемпион чемпионатов России, 8 кратный медалист кубков Европы, бронзовый призер первенства Европы. Имеет педагогическое, юридическое образование. В основу ставит спортивную дисциплину, уважение к старшим. Опыт работы более 4 лет.',
+            'category': 'judo',
+            'age_group': '4-6 лет'
+        },
+        {
+            'name': 'Дзюдо старшая группа А (7+ лет)',
+            'description': 'Группа для детей 7 лет и старше',
+            'detailed_description': 'Серьезные тренировки по дзюдо для детей школьного возраста. Программа включает изучение техники, участие в соревнованиях, развитие физических качеств и спортивного характера. Продолжительность занятия 50 минут. Форма одежды кимано (если нет - шорты, футболка), с собой негазированную питьевую воду 0.5 л объёмом, сменная обувь. Занятия проходят босиком.',
+            'schedule': 'Понедельник, Среда, Пятница с 20:30 до 21:20',
+            'price_8': 4000,
+            'price_12': 5000,
+            'price_single': 700,
+            'trainer_name': 'Галоян Пайлак Араратович',
+            'trainer_info': 'Является мастером спорта международного класса по дзюдо. Многократный призёр и чемпион чемпионатов России, 8 кратный медалист кубков Европы, бронзовый призер первенства Европы. Имеет педагогическое, юридическое образование. В основу ставит спортивную дисциплину, уважение к старшим. Опыт работы более 4 лет.',
+            'category': 'judo',
+            'age_group': '7+ лет'
+        },
+        {
+            'name': 'Дзюдо старшая группа Б (7+ лет)',
+            'description': 'Группа для детей 7 лет и старше',
+            'detailed_description': 'Серьезные тренировки по дзюдо для детей школьного возраста. Программа включает изучение техники, участие в соревнованиях, развитие физических качеств и спортивного характера. Продолжительность занятия 50 минут. Форма одежды кимано (если нет - шорты, футболка), с собой негазированную питьевую воду 0.5 л объёмом, сменная обувь. Занятия проходят босиком.',
+            'schedule': 'Понедельник, Среда, Пятница с 10:00 до 10:50',
+            'price_8': 4000,
+            'price_12': 5000,
+            'price_single': 700,
+            'trainer_name': 'Галоян Пайлак Араратович',
+            'trainer_info': 'Является мастером спорта международного класса по дзюдо. Многократный призёр и чемпион чемпионатов России, 8 кратный медалист кубков Европы, бронзовый призер первенства Европы. Имеет педагогическое, юридическое образование. В основу ставит спортивную дисциплину, уважение к старшим. Опыт работы более 4 лет.',
+            'category': 'judo',
+            'age_group': '7+ лет'
+        },
+        {
+            'name': 'Дзюдо старшая группа В (7+ лет)',
+            'description': 'Группа для детей 7 лет и старше',
+            'detailed_description': 'Серьезные тренировки по дзюдо для детей школьного возраста. Программа включает изучение техники, участие в соревнованиях, развитие физических качеств и спортивного характера. Продолжительность занятия 50 минут. Форма одежды кимано (если нет - шорты, футболка), с собой негазированную питьевую воду 0.5 л объёмом, сменная обувь. Занятия проходят босиком.',
+            'schedule': 'Вторник, Четверг с 19:30 до 20:20, Суббота с 11:00 до 11:50',
+            'price_8': 4000,
+            'price_12': 5000,
+            'price_single': 700,
+            'trainer_name': 'Галоян Пайлак Араратович',
+            'trainer_info': 'Является мастером спорта международного класса по дзюдо. Многократный призёр и чемпион чемпионатов России, 8 кратный медалист кубков Европы, бронзовый призер первенства Европы. Имеет педагогическое, юридическое образование. В основу ставит спортивную дисциплину, уважение к старшим. Опыт работы более 4 лет.',
+            'category': 'judo',
+            'age_group': '7+ лет'
+        },
+        {
+            'name': 'Гимнастика (3+ лет)',
+            'description': 'Гимнастика для детей от 3х до 5 лет',
+            'detailed_description': 'Гимнастика - отлично подойдёт для мальчиков и девочек, включающие в общеразвивающие упражнения, с уклоном на растяжку, координацию, статические упражнения. Весь тренировочный процесс контролируется спортивной дисциплиной. Занятия продолжительностью 50 минут, форма одежды (шорты, футболка), с собой теплую воду негазированную и сменную обувь.',
+            'schedule': 'Понедельник, Среда, Пятница с 18:30 до 19:20',
+            'price_8': 4000,
+            'price_12': 5000,
+            'price_single': 700,
+            'trainer_name': 'Галоян Пайлак Араратович',
+            'trainer_info': 'Является мастером спорта международного класса по дзюдо. Многократный призёр и чемпион чемпионатов России, 8 кратный медалист кубков Европы, бронзовый призер первенства Европы. Имеет педагогическое, юридическое образование. В основу ставит спортивную дисциплину, уважение к старшим. Опыт работы более 4 лет.',
+            'category': 'gymnastics',
+            'age_group': '3-5 лет'
+        },
+        {
+            'name': 'ММА (14+ лет)',
+            'description': 'Смешанные единоборства для подростков от 14+ и взрослых',
+            'detailed_description': 'Отлично подойдёт для подростков, которые хотят научится самообороне, принимать участие в соревнованиях и прогрессировать с каждой тренировкой. Для взрослых отлично подойдут занятия для тех, кто всегда мечтал попробовать для себя что-то новое, тренировки в удовольствие, под присмотром грамотного тренерского состава, обучение техническому арсеналу единоборств, развитие выносливости, работа над физической формой.',
+            'schedule': 'Вторник, Четверг с 21:30 до 22:30',
+            'price_8': 4000,
+            'price_12': 5000,
+            'price_single': 900,
+            'trainer_name': 'Галоян Пайлак Араратович',
+            'trainer_info': 'Является мастером спорта международного класса по дзюдо. Многократный призёр и чемпион чемпионатов России, 8 кратный медалист кубков Европы, бронзовый призер первенства Европы. Имеет педагогическое, юридическое образование. В основу ставит спортивную дисциплину, уважение к старшим. Опыт работы более 4 лет.',
+            'category': 'mma',
+            'age_group': '14+ лет'
+        },
+        {
+            'name': 'Женский фитнес (18+ лет)',
+            'description': 'Фитнес программы для женщин', 
+            'detailed_description': 'Специально разработанные программы фитнеса для женщин всех возрастов. Включают кардио-тренировки, силовые упражнения, растяжку и функциональный тренинг.',
+            'schedule': 'Расписание в проработке',
+            'price_8': 4000,
+            'price_single': 700,
+            'trainer_name': 'Анна Морозова',
+            'trainer_info': 'Сертифицированный тренер по фитнесу, специалист по женскому здоровью и питанию. Опыт работы в фитнес-индустрии 12 лет.',
+            'category': 'fitness',
+            'age_group': '18+ лет'
+        }
+    ]
+    
+    updated_count = 0
+    created_count = 0
+    
+    for group_data in updated_groups:
+        if group_data['name'] in existing_groups_dict:
+            # Обновляем существующую группу
+            group = existing_groups_dict[group_data['name']]
+            for key, value in group_data.items():
+                setattr(group, key, value)
+            updated_count += 1
+        else:
+            # Создаем новую группу
             group = SportGroup(**group_data)
             db.session.add(group)
-        
-        db.session.commit()
+            created_count += 1
+    
+    db.session.commit()
+    print(f"Спортивные группы обновлены: {updated_count} обновлено, {created_count} создано!")
 
 app = create_app()
+
+
+@app.route('/admin/dashboard')
+def admin_dashboard():
+    logger.info("Загрузка admin dashboard")
+    if session.get('role') != 'admin':
+        logger.info(f"Редирект на index, роль: {session.get('role')}")
+        return redirect(url_for('index'))
+    try:
+        # Получаем общую статистику
+        total_participants = Participant.query.count()
+        active_subscriptions = Subscription.query.filter_by(is_active=True).count()
+        pending_payments = Payment.query.filter_by(status='pending').count()
+        recent_payments = Payment.query.join(Subscription).join(Participant).order_by(Payment.created_at.desc()).limit(5).all()
+        low_balance_participants = Subscription.query.filter(
+            Subscription.remaining_lessons <= 1,
+            Subscription.is_active == True
+        ).join(Participant).limit(5).all()
+        return render_template('admin/dashboard.html',
+                              total_participants=total_participants,
+                              active_subscriptions=active_subscriptions,
+                              pending_payments=pending_payments,
+                              recent_payments=recent_payments,
+                              low_balance_participants=low_balance_participants)
+    except Exception as e:
+        logger.error(f"Ошибка при рендеринге admin/dashboard.html: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 
 @app.route('/')
 def index():
     """Главная страница приложения"""
+    # Если админ уже авторизован (сессия установлена), перенаправляем сразу в админ-панель
+    if session.get('role') == 'admin':
+        return redirect(url_for('admin_dashboard'))
     return render_template('index.html')
 
 @app.route('/group/<int:group_id>')
@@ -131,6 +341,8 @@ def init_user():
         if not user:
             # Определяем роль пользователя
             role = 'admin' if telegram_id == app.config['ADMIN_TELEGRAM_ID'] else 'parent'
+            logger.info(
+                f"Received telegram_id: {telegram_id}, ADMIN_TELEGRAM_ID: {app.config['ADMIN_TELEGRAM_ID']}, assigned role: {role}")
             
             # Создаем нового пользователя
             user = User(
@@ -173,9 +385,15 @@ def get_sport_groups():
                 'id': group.id,
                 'name': group.name,
                 'description': group.description,
+                'detailed_description': group.detailed_description,
+                'trainer_name': group.trainer_name,
+                'trainer_info': group.trainer_info,
                 'price_8': group.price_8,
                 'price_12': group.price_12,
-                'price_single': group.price_single
+                'price_single': group.price_single,
+                'category': group.category,
+                'age_group': group.age_group,
+                'schedule': group.schedule
             } for group in groups]
         })
     except Exception as e:
@@ -202,6 +420,9 @@ def get_sport_group_details(group_id):
                 'price_8': group.price_8,
                 'price_12': group.price_12,
                 'price_single': group.price_single,
+                'category': group.category,
+                'age_group': group.age_group,
+                'schedule_text': group.schedule,
                 'schedule': [{
                     'id': schedule.id,
                     'day': days[schedule.day_of_week],
@@ -320,17 +541,32 @@ def admin_schedule():
     
     if request.method == 'GET':
         try:
-            schedules = Schedule.query.join(SportGroup).all()
-            return jsonify({
-                'success': True,
-                'schedules': [{
-                    'id': s.id,
-                    'sport_group_name': s.sport_group.name,
-                    'day_of_week': s.day_of_week,
-                    'start_time': s.start_time.strftime('%H:%M'),
-                    'end_time': s.end_time.strftime('%H:%M')
-                } for s in schedules]
-            })
+            group_id = request.args.get('group_id')
+            if group_id:
+                # Получаем расписание для конкретной группы
+                schedules = Schedule.query.filter_by(sport_group_id=group_id).all()
+                schedule_data = []
+                for schedule in schedules:
+                    schedule_data.append({
+                        'id': schedule.id,
+                        'day_of_week': schedule.day_of_week,
+                        'start_time': schedule.start_time.strftime('%H:%M'),
+                        'end_time': schedule.end_time.strftime('%H:%M')
+                    })
+                return jsonify({'success': True, 'schedule': schedule_data})
+            else:
+                # Получаем все расписание
+                schedules = Schedule.query.join(SportGroup).all()
+                return jsonify({
+                    'success': True,
+                    'schedules': [{
+                        'id': s.id,
+                        'sport_group_name': s.sport_group.name,
+                        'day_of_week': s.day_of_week,
+                        'start_time': s.start_time.strftime('%H:%M'),
+                        'end_time': s.end_time.strftime('%H:%M')
+                    } for s in schedules]
+                })
         except Exception as e:
             logger.error(f"Error in admin_schedule GET: {e}")
             return jsonify({'success': False, 'error': str(e)}), 500
@@ -338,21 +574,61 @@ def admin_schedule():
     elif request.method == 'POST':
         try:
             data = request.get_json()
+            sport_group_id = data.get('sport_group_id')
+            day_of_week = data.get('day_of_week')
+            start_time = data.get('start_time')
+            end_time = data.get('end_time')
             
-            schedule = Schedule(
-                sport_group_id=data['sport_group_id'],
-                day_of_week=data['day_of_week'],
-                start_time=datetime.strptime(data['start_time'], '%H:%M').time(),
-                end_time=datetime.strptime(data['end_time'], '%H:%M').time()
-            )
+            if not all([sport_group_id, day_of_week, start_time, end_time]):
+                return jsonify({'success': False, 'error': 'Не все поля заполнены'}), 400
             
-            db.session.add(schedule)
-            db.session.commit()
+            # Проверяем, не существует ли уже расписание для этого дня и группы
+            existing_schedule = Schedule.query.filter_by(
+                sport_group_id=sport_group_id,
+                day_of_week=day_of_week
+            ).first()
             
-            return jsonify({'success': True, 'schedule_id': schedule.id})
+            if existing_schedule:
+                # Обновляем существующее расписание
+                existing_schedule.start_time = datetime.strptime(start_time, '%H:%M').time()
+                existing_schedule.end_time = datetime.strptime(end_time, '%H:%M').time()
+                db.session.commit()
+                return jsonify({'success': True, 'message': 'Расписание обновлено'})
+            else:
+                # Создаем новое расписание
+                new_schedule = Schedule(
+                    sport_group_id=sport_group_id,
+                    day_of_week=day_of_week,
+                    start_time=datetime.strptime(start_time, '%H:%M').time(),
+                    end_time=datetime.strptime(end_time, '%H:%M').time()
+                )
+                db.session.add(new_schedule)
+                db.session.commit()
+                return jsonify({'success': True, 'message': 'Расписание создано'})
+                
         except Exception as e:
             logger.error(f"Error in admin_schedule POST: {e}")
             return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/admin/schedule/<int:schedule_id>', methods=['DELETE'])
+def delete_schedule(schedule_id):
+    """Удаление расписания"""
+    try:
+        if session.get('role') != 'admin':
+            return jsonify({'success': False, 'error': 'Access denied'}), 403
+        
+        schedule = Schedule.query.get(schedule_id)
+        if not schedule:
+            return jsonify({'success': False, 'error': 'Расписание не найдено'}), 404
+        
+        db.session.delete(schedule)
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': 'Расписание удалено'})
+        
+    except Exception as e:
+        logger.error(f"Error in delete_schedule: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/api/admin/payments')
 def admin_payments():
@@ -448,16 +724,17 @@ def reject_payment(payment_id):
         logger.error(f"Error in reject_payment: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
+
 @app.route('/api/admin/students')
 def admin_students():
     """Получить список всех учеников с финансовой информацией"""
     try:
         if session.get('role') != 'admin':
             return jsonify({'success': False, 'error': 'Access denied'}), 403
-        
+
         # Получаем всех участников с их подписками и платежами
         participants = Participant.query.all()
-        
+
         students_data = []
         for participant in participants:
             # Получаем активные подписки участника
@@ -465,25 +742,25 @@ def admin_students():
                 participant_id=participant.id,
                 is_active=True
             ).all()
-            
+
             participant_subscriptions = []
             total_paid_all = 0
             total_remaining_all = 0
-            
+
             for subscription in subscriptions:
                 # Получаем подтвержденные платежи для этой подписки
                 payments = Payment.query.filter_by(
                     subscription_id=subscription.id,
                     status='approved'
                 ).all()
-                
+
                 total_paid = sum(payment.amount for payment in payments)
-                
+
                 # Добавляем подписку только если есть подтвержденные платежи
                 if total_paid > 0:
                     total_paid_all += total_paid
                     total_remaining_all += subscription.remaining_lessons
-                    
+
                     participant_subscriptions.append({
                         'subscription_id': subscription.id,
                         'sport_group_name': subscription.sport_group.name,
@@ -494,7 +771,11 @@ def admin_students():
                         'start_date': subscription.start_date.strftime('%Y-%m-%d'),
                         'end_date': subscription.end_date.strftime('%Y-%m-%d')
                     })
-            
+
+            # Берем последний неиспользованный (или последний созданный) код авторизации
+            latest_auth_code = AuthorizationCode.query.filter_by(participant_id=participant.id).order_by(AuthorizationCode.created_at.desc()).first()
+            auth_code_value = latest_auth_code.code if latest_auth_code else None
+
             # Добавляем участника только если у него есть оплаченные подписки
             if participant_subscriptions:
                 students_data.append({
@@ -505,20 +786,21 @@ def admin_students():
                     'medical_certificate': participant.medical_certificate,
                     'discount_type': participant.discount_type,
                     'discount_percent': participant.discount_percent,
+                    'authorization_code': auth_code_value,
                     'subscriptions': participant_subscriptions,
                     'total_paid_all': total_paid_all,
                     'total_remaining_all': total_remaining_all,
                     'subscription_count': len(participant_subscriptions)
                 })
-        
+
         # Сортируем по имени участника
         students_data.sort(key=lambda x: x['participant_name'])
-        
+
         return jsonify({
             'success': True,
             'students': students_data
         })
-        
+
     except Exception as e:
         logger.error(f"Error in admin_students: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
@@ -549,6 +831,9 @@ def admin_group_students(group_id):
                 total_paid = sum(payment.amount for payment in payments)
                 participant = subscription.participant
                 
+                latest_auth_code = AuthorizationCode.query.filter_by(participant_id=participant.id).order_by(AuthorizationCode.created_at.desc()).first()
+                auth_code_value = latest_auth_code.code if latest_auth_code else None
+                
                 students_data.append({
                     'participant_id': participant.id,
                     'participant_name': participant.full_name,
@@ -557,6 +842,7 @@ def admin_group_students(group_id):
                     'medical_certificate': participant.medical_certificate,
                     'discount_type': participant.discount_type,
                     'discount_percent': participant.discount_percent,
+                    'authorization_code': auth_code_value,
                     'subscription_id': subscription.id,
                     'subscription_type': subscription.subscription_type,
                     'total_lessons': subscription.total_lessons,
@@ -715,14 +1001,16 @@ def admin_discounts_update(discount_id):
 @app.route('/api/parent/contact')
 def parent_contact():
     """Связаться с администрацией"""
-    return jsonify({
-        'success': True,
-        'contact_info': {
-            'phone': '+7 (XXX) XXX-XX-XX',
-            'email': 'admin@sportclub.ru',
-            'address': 'г. Москва, ул. Спортивная, д. 1'
+    try:
+        contact = {
+            'name': app.config.get('ADMIN_CONTACT_NAME'),
+            'phone': app.config.get('ADMIN_CONTACT_PHONE'),
+            'telegram': f"@{app.config.get('ADMIN_CONTACT_TELEGRAM').lstrip('@')}"
         }
-    })
+        return jsonify({'success': True, 'contact_info': contact})
+    except Exception as e:
+        logger.error(f"Error in parent_contact: {e}")
+        return jsonify({'success': False, 'error': 'Failed to load contact info'}), 500
 
 @app.route('/api/participants')
 def get_participants():
@@ -1390,6 +1678,56 @@ def admin_check_low_balance():
         logger.error(f"Error in admin_check_low_balance: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
+@app.route('/api/admin/update-sport-groups', methods=['POST'])
+def update_sport_groups_api():
+    """API endpoint для обновления спортивных групп"""
+    try:
+        # Проверяем права администратора
+        if session.get('role') != 'admin':
+            return jsonify({'success': False, 'error': 'Доступ запрещен'}), 403
+        
+        # Вызываем функцию обновления
+        update_sport_groups()
+        
+        return jsonify({
+            'success': True, 
+            'message': 'Спортивные группы успешно обновлены'
+        })
+        
+    except Exception as e:
+        logger.error(f"Ошибка при обновлении спортивных групп: {e}")
+        return jsonify({
+            'success': False, 
+            'error': f'Ошибка при обновлении: {str(e)}'
+        }), 500
+
+@app.route('/api/admin/reset-sport-groups', methods=['POST'])
+def reset_sport_groups_api():
+    """API endpoint для сброса и пересоздания спортивных групп"""
+    try:
+        # Проверяем права администратора
+        if session.get('role') != 'admin':
+            return jsonify({'success': False, 'error': 'Доступ запрещен'}), 403
+        
+        # Удаляем все существующие группы
+        SportGroup.query.delete()
+        db.session.commit()
+        
+        # Создаем новые группы
+        create_sport_groups()
+        
+        return jsonify({
+            'success': True, 
+            'message': 'Спортивные группы успешно сброшены и пересозданы'
+        })
+        
+    except Exception as e:
+        logger.error(f"Ошибка при сбросе спортивных групп: {e}")
+        return jsonify({
+            'success': False, 
+            'error': f'Ошибка при сбросе: {str(e)}'
+        }), 500
+
 # API endpoints для авторизации
 
 @app.route('/api/auth/verify', methods=['POST'])
@@ -1595,6 +1933,44 @@ def send_telegram_notification(telegram_id, message):
             
     except Exception as e:
         logger.error(f"Error sending Telegram notification: {e}")
+
+@app.route('/api/enroll-request', methods=['POST'])
+def enroll_request():
+    """Заявка на запись в группу: уведомить администратора"""
+    try:
+        data = request.get_json() or {}
+        user_id = session.get('user_id')
+        if not user_id:
+            return jsonify({'success': False, 'error': 'Unauthorized'}), 403
+        group_id = data.get('group_id')
+        group_name = data.get('group_name')
+        user = User.query.get(user_id)
+        if not group_id or not group_name:
+            return jsonify({'success': False, 'error': 'Некорректные данные заявки'}), 400
+        # Сообщение для администратора
+        msg = (
+            f"📩 НОВАЯ ЗАЯВКА НА ЗАПИСЬ\n\n"
+            f"👤 Пользователь: {user.first_name or ''} {user.last_name or ''} (@{user.username or '-'}), id={user.telegram_id}\n"
+            f"🏃‍♂️ Группа: {group_name} (id={group_id})\n"
+            f"⏳ Статус: ожидает связи"
+        )
+        # Отправляем всем администраторам
+        admin_users = User.query.filter_by(role='admin').all()
+        for admin in admin_users:
+            if admin.telegram_id:
+                send_telegram_notification(admin.telegram_id, msg)
+        # Дополнительно дублируем на указанный канал/аккаунт если есть
+        try:
+            from config import Config
+            extra_chat = getattr(Config, 'ENROLL_NOTIFY_CHAT_ID', None)
+            if extra_chat:
+                send_telegram_notification(extra_chat, msg)
+        except Exception:
+            pass
+        return jsonify({'success': True})
+    except Exception as e:
+        logger.error(f"Error in enroll_request: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

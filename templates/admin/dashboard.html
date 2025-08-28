@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Административная панель - Спортивный клуб</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Inter, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #ffffff;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 32px 0;
+        }
+
+        .header h1 {
+            font-size: 36px;
+            font-weight: 800;
+            margin-bottom: 12px;
+            color: #ffffff;
+        }
+
+        .header p {
+            color: rgba(255,255,255,0.9);
+            font-size: 18px;
+            font-weight: 500;
+            text-shadow: none;
+        }
+
+        /* Навигация */
+        .admin-nav {
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 24px;
+            margin-bottom: 32px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .nav-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        .nav-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #ffffff;
+            border: none;
+            padding: 20px;
+            border-radius: 16px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+        }
+
+        .nav-btn i {
+            font-size: 24px;
+        }
+
+        /* Статистика */
+        .stats-section {
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 24px;
+            margin-bottom: 32px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .stats-section h2 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 24px;
+            color: #ffffff;
+            text-align: center;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .stat-card {
+            background: rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            background: rgba(255,255,255,0.15);
+        }
+
+        .stat-number {
+            font-size: 36px;
+            font-weight: 800;
+            color: #ffffff;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            font-size: 16px;
+            color: rgba(255,255,255,0.8);
+            font-weight: 500;
+        }
+
+        /* Таблицы */
+        .table-section {
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 24px;
+            margin-bottom: 32px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .table-section h2 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 24px;
+            color: #ffffff;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 16px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .data-table th {
+            background: rgba(255,255,255,0.1);
+            font-weight: 600;
+            color: #ffffff;
+            font-size: 16px;
+        }
+
+        .data-table td {
+            color: rgba(255,255,255,0.9);
+            font-size: 14px;
+        }
+
+        .data-table tr:hover {
+            background: rgba(255,255,255,0.05);
+        }
+
+        /* Статусы */
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-pending {
+            background: rgba(245, 158, 11, 0.2);
+            color: #fbbf24;
+            border: 1px solid rgba(245, 158, 11, 0.4);
+        }
+
+        .status-approved {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.4);
+        }
+
+        .status-rejected {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.4);
+        }
+
+        .balance-low {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.4);
+        }
+
+        .balance-medium {
+            background: rgba(245, 158, 11, 0.2);
+            color: #fbbf24;
+            border: 1px solid rgba(245, 158, 11, 0.4);
+        }
+
+        .balance-high {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.4);
+        }
+
+        /* Утилиты */
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: rgba(255,255,255,0.6);
+            font-size: 16px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: rgba(255,255,255,0.8);
+            font-size: 18px;
+        }
+
+        /* Адаптивность */
+        @media (max-width: 768px) {
+            .container {
+                padding: 16px;
+            }
+            
+            .header h1 {
+                font-size: 28px;
+            }
+            
+            .nav-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .data-table {
+                font-size: 12px;
+            }
+            
+            .data-table th,
+            .data-table td {
+                padding: 12px 8px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 24px;
+            }
+            
+            .nav-btn {
+                padding: 16px;
+                min-height: 60px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container admin-container">
+        <div class="header">
+            <h1>🏋️ Административная панель</h1>
+            <p>Добро пожаловать, {{ session.first_name }}! Управляйте спортивным клубом</p>
+        </div>
+
+        <!-- Навигация -->
+        <div class="admin-nav">
+            <div class="nav-grid">
+                <button class="nav-btn" onclick="showModal('participantsModal')">
+                    <span>👥</span>
+                    <span>Участники</span>
+                </button>
+                <button class="nav-btn" onclick="showModal('scheduleModal')">
+                    <span>📅</span>
+                    <span>Расписание</span>
+                </button>
+                <button class="nav-btn" onclick="showModal('paymentsModal')">
+                    <span>💰</span>
+                    <span>Платежи</span>
+                </button>
+                <button class="nav-btn" onclick="showModal('attendanceModal')">
+                    <span>📊</span>
+                    <span>Посещаемость</span>
+                </button>
+                <button class="nav-btn" onclick="showModal('discountsModal')">
+                    <span>🎫</span>
+                    <span>Акции</span>
+                </button>
+                <button class="nav-btn" onclick="checkLowBalance()">
+                    <span>⚠️</span>
+                    <span>Балансы</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Статистика -->
+        <div class="stats-section">
+            <h2>📈 Общая статистика</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number">{{ total_participants }}</div>
+                    <div class="stat-label">Всего участников</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ active_subscriptions }}</div>
+                    <div class="stat-label">Активные подписки</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ pending_payments }}</div>
+                    <div class="stat-label">Ожидают оплаты</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ low_balance_count if low_balance_count else 0 }}</div>
+                    <div class="stat-label">Низкий баланс</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Последние платежи -->
+        <div class="table-section">
+            <h2>💰 Последние платежи</h2>
+            {% if recent_payments %}
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Участник</th>
+                            <th>Группа</th>
+                            <th>Сумма</th>
+                            <th>Статус</th>
+                            <th>Дата</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for payment in recent_payments %}
+                            <tr>
+                                <td>{{ payment.subscription.participant.full_name }}</td>
+                                <td>{{ payment.subscription.sport_group.name }}</td>
+                                <td>{{ payment.amount }} ₽</td>
+                                <td>
+                                    <span class="status-badge status-{{ payment.status }}">
+                                        {% if payment.status == 'approved' %}
+                                            ✅ Подтвержден
+                                        {% elif payment.status == 'rejected' %}
+                                            ❌ Отклонен
+                                        {% else %}
+                                            ⏳ Ожидает
+                                        {% endif %}
+                                    </span>
+                                </td>
+                                <td>{{ payment.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <div class="no-data">Нет новых платежей</div>
+            {% endif %}
+        </div>
+
+        <!-- Участники с низким балансом -->
+        <div class="table-section">
+            <h2>⚠️ Участники с низким балансом</h2>
+            {% if low_balance_participants %}
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ФИО</th>
+                            <th>Группа</th>
+                            <th>Осталось занятий</th>
+                            <th>Телефон</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for subscription in low_balance_participants %}
+                            <tr>
+                                <td>{{ subscription.participant.full_name }}</td>
+                                <td>{{ subscription.sport_group.name }}</td>
+                                <td>
+                                    <span class="status-badge balance-{{ 'low' if subscription.remaining_lessons <= 1 else 'medium' if subscription.remaining_lessons <= 3 else 'high' }}">
+                                        {{ subscription.remaining_lessons }}
+                                    </span>
+                                </td>
+                                <td>{{ subscription.participant.parent_phone }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <div class="no-data">Все участники имеют достаточный баланс</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        // Функции для модальных окон
+        function showModal(modalId) {
+            // Здесь будет логика открытия модальных окон
+            console.log('Opening modal:', modalId);
+        }
+
+        function checkLowBalance() {
+            // Здесь будет логика проверки балансов
+            console.log('Checking low balance');
+        }
+    </script>
+
+    <div class="admin-bottom-bar">
+        <button class="nav-btn" onclick="showModal('participantsModal')">👥<span style="font-size:12px;">Участники</span></button>
+        <button class="nav-btn" onclick="showModal('scheduleModal')">📅<span style="font-size:12px;">Расписание</span></button>
+        <button class="nav-btn" onclick="showModal('paymentsModal')">💰<span style="font-size:12px;">Платежи</span></button>
+        <button class="nav-btn" onclick="showModal('attendanceModal')">📊<span style="font-size:12px;">Посещаемость</span></button>
+        <button class="nav-btn" onclick="showModal('discountsModal')">🎫<span style="font-size:12px;">Акции</span></button>
+        <button class="nav-btn" onclick="checkLowBalance()">⚠️<span style="font-size:12px;">Балансы</span></button>
+    </div>
+
+    <style>
+        .admin-container { padding-bottom: 84px; }
+        .admin-bottom-bar {
+            position: fixed; left: 0; right: 0; bottom: 0;
+            display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px;
+            padding: 10px 12px; background: rgba(21,21,31,0.9);
+            border-top: 1px solid rgba(255,255,255,0.15);
+            backdrop-filter: blur(10px); z-index: 1000;
+        }
+        .admin-bottom-bar .nav-btn { min-height: 48px; padding: 8px; border-radius: 12px; }
+        @media (max-width: 640px) {
+            .admin-bottom-bar { grid-template-columns: repeat(3, 1fr); }
+        }
+    </style>
+</body>
+</html>

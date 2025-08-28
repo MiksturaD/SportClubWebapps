@@ -41,6 +41,9 @@ class SportGroup(db.Model):
     price_8 = db.Column(db.Integer, default=0)  # Цена за 8 занятий
     price_12 = db.Column(db.Integer, default=0)  # Цена за 12 занятий
     price_single = db.Column(db.Integer, default=0)  # Цена за разовое занятие
+    category = db.Column(db.String(50))  # Категория спорта (gymnastics, judo, mma, fitness)
+    age_group = db.Column(db.String(50))  # Возрастная группа
+    schedule = db.Column(db.Text)  # Расписание занятий
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Relationships
