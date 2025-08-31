@@ -24,8 +24,8 @@
         <div class="user-panel" id="adminPanel" style="display: none;">
             <h2>👨‍💼 Административная панель</h2>
             <div class="panel-grid">
-                <button class="panel-btn" onclick="showModal('participantsModal')">
-                    👥 Участники
+                <button class="panel-btn" onclick="window.location.href='/admin/students'">
+                    👥 Ученики
                 </button>
                 <button class="panel-btn" onclick="showModal('paymentsModal')">
                     💰 Платежи
@@ -76,7 +76,7 @@
     <div class="modal" id="participantsModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 class="modal-title">Регистрация участников</h3>
+                <h3 class="modal-title">Управление учениками</h3>
                 <button class="close-btn" onclick="closeModal('participantsModal')">&times;</button>
             </div>
             <div class="modal-body">

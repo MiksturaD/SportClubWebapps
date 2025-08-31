@@ -1,7 +1,20 @@
 // Инициализация Telegram Web App
-let tg = window.Telegram.WebApp;
-tg.ready();
-tg.expand();
+let tg = null;
+if (window.Telegram && window.Telegram.WebApp) {
+    tg = window.Telegram.WebApp;
+    tg.ready();
+    tg.expand();
+} else {
+    console.log('Telegram Web App not available, running in browser mode');
+    // Создаем заглушку для функций Telegram
+    tg = {
+        showAlert: function(message) { alert(message); },
+        showConfirm: function(message) { return confirm(message); },
+        showPopup: function(message) { alert(message); },
+        expand: function() {},
+        ready: function() {}
+    };
+}
 
 // Глобальные переменные
 let currentUser = null;
@@ -12,27 +25,22 @@ document.addEventListener('DOMContentLoaded', function() {
     initApp();
 });
 
-async function initAdminDashboard() {
-    try {
-        console.log('Initializing admin dashboard');
-        // Загружаем группы для администратора
-        await loadSportGroups();
-        // Здесь можно добавить динамическую загрузку данных, если нужно
-        // Например, обновление статистики через API
-    } catch (error) {
-        console.error('Error initializing admin dashboard:', error);
-        showError('Ошибка инициализации админской панели');
-    }
-}
+
 
 async function initApp() {
     try {
-        const userData = tg.initDataUnsafe?.user || {
-            id: 123456789,
-            username: 'test_user',
-            first_name: 'Тестовый',
-            last_name: 'Пользователь'
-        };
+        // Получаем данные пользователя из Telegram или используем тестовые данные
+        let userData;
+        if (window.Telegram && window.Telegram.WebApp && tg.initDataUnsafe?.user) {
+            userData = tg.initDataUnsafe.user;
+        } else {
+            userData = {
+                id: 123456789,
+                username: 'test_user',
+                first_name: 'Тестовый',
+                last_name: 'Пользователь'
+            };
+        }
 
         const response = await fetch('/api/init', {
             method: 'POST',
@@ -46,10 +54,7 @@ async function initApp() {
         const result = await response.json();
 
         if (result.success) {
-            console.log('User initialized:', result.user);
             currentUser = result.user;
-
-
 
             showUserPanel();
             await loadSportGroups();
@@ -102,12 +107,6 @@ function renderDirections() {
         { key: 'mma', title: 'ММА от 14 лет' },
         { key: 'fitness', title: 'Женский фитнес от 18 лет' }
     ];
-    const byCategory = sportGroups.reduce((acc, g) => {
-        if (!acc[g.category]) acc[g.category] = [];
-        acc[g.category].push(g);
-        return acc;
-    }, {});
-
     const html = directions.map(d => {
         return `
             <div class="sport-group-card direction-card" onclick="openCategory('${d.key}')">
@@ -149,7 +148,6 @@ function openCategory(category) {
             ${currentUser && currentUser.role === 'admin' ? `
                 <div class="group-actions">
                     <button class="btn btn-secondary" onclick="showGroupStudents(${group.id}, '${group.name}')">👥 Ученики</button>
-                    <button class="btn btn-secondary" onclick="showGroupSchedule(${group.id}, '${group.name}')">📅 Расписание</button>
                     <button class="btn btn-secondary" onclick="openGroupAttendance(${group.id}, '${group.name}')">📝 Посещаемость</button>
                     <button class="btn btn-secondary" onclick="openPaymentsForGroup(${group.id}, '${group.name}')">💰 Платежи</button>
                 </div>
@@ -253,9 +251,7 @@ function showModal(modalId) {
     if (!el) return;
     el.style.display = 'block';
 
-    if (modalId === 'scheduleModal') {
-        loadScheduleData();
-    } else if (modalId === 'paymentsModal') {
+    if (modalId === 'paymentsModal') {
         loadPaymentsData();
     } else if (modalId === 'attendanceModal') {
         loadAttendanceGroups();
@@ -510,38 +506,7 @@ async function rejectPayment(paymentId) {
     }
 }
 
-// ===== Расписание (админ общий список) =====
-async function loadScheduleData() {
-    try {
-        const select = document.getElementById('scheduleGroup');
-        if (select) {
-            select.innerHTML = '<option value="">Выберите группу</option>' + sportGroups.map(g => `<option value="${g.id}">${g.name}</option>`).join('');
-        }
-        const resp = await fetch('/api/admin/schedule');
-        const data = await resp.json();
-        const list = document.getElementById('scheduleList');
-        if (!list) return;
-        if (data.success) {
-            if ((data.schedules || []).length > 0) {
-                list.innerHTML = `
-                    <h4>Текущее расписание:</h4>
-                    ${data.schedules.map(s => `
-                        <div class="schedule-item">
-                            <div class="schedule-day">${s.sport_group_name}</div>
-                            <div class="schedule-time">${getDayName(s.day_of_week)} ${s.start_time} - ${s.end_time}</div>
-                        </div>
-                    `).join('')}
-                `;
-            } else {
-                list.innerHTML = '<h4>Текущее расписание:</h4><p>Расписание пока не установлено</p>';
-            }
-        } else {
-            list.innerHTML = '<div class="error">Ошибка загрузки расписания</div>';
-        }
-    } catch (e) {
-        console.error('Ошибка загрузки данных расписания', e);
-    }
-}
+
 
 // Формы: участники, расписание, оплата
 (function bindParticipantForm(){
@@ -577,33 +542,7 @@ async function loadScheduleData() {
     });
 })();
 
-(function bindScheduleForm(){
-    const form = document.getElementById('scheduleForm');
-    if (!form) return;
-    form.addEventListener('submit', async function(e){
-        e.preventDefault();
-        const payload = {
-            sport_group_id: parseInt(document.getElementById('scheduleGroup').value),
-            day_of_week: parseInt(document.getElementById('dayOfWeek').value),
-            start_time: document.getElementById('startTime').value,
-            end_time: document.getElementById('endTime').value
-        };
-        try {
-            const resp = await fetch('/api/admin/schedule', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)});
-            const data = await resp.json();
-            if (data.success) {
-                showSuccess('Расписание успешно добавлено');
-                form.reset();
-                loadScheduleData();
-            } else {
-                showError('Ошибка добавления расписания: ' + data.error);
-            }
-        } catch (e) {
-            console.error('Ошибка добавления расписания', e);
-            showError('Ошибка добавления расписания');
-        }
-    });
-})();
+
 
 // Оплата (родитель)
 async function loadPaymentData() {
@@ -1019,62 +958,38 @@ async function checkAuthorization() {
     }
 }
 
-function loadParticipantGroups() {
+async function loadParticipantGroups() {
     const select = document.getElementById('participantGroup');
-    if (select && Array.isArray(sportGroups) && sportGroups.length>0) {
+    if (!select) return;
+    
+    // Если sportGroups недоступны или пусты, загружаем их напрямую
+    if (!Array.isArray(sportGroups) || sportGroups.length === 0) {
+        try {
+            const response = await fetch('/api/sport-groups');
+            const result = await response.json();
+            
+            if (result.success && Array.isArray(result.groups)) {
+                sportGroups = result.groups;
+            } else {
+                console.error('API returned error or invalid data:', result);
+                return;
+            }
+        } catch (error) {
+            console.error('Error loading groups directly:', error);
+            return;
+        }
+    }
+    
+    if (Array.isArray(sportGroups) && sportGroups.length > 0) {
         select.innerHTML = '<option value="">Выберите группу</option>' + sportGroups.map(g => `<option value="${g.id}">${g.name}</option>`).join('');
+    } else {
+        select.innerHTML = '<option value="">Нет доступных групп</option>';
     }
 }
 
-// ===== Операции с группами (админ) =====
-async function updateSportGroups() {
-    try {
-        if (!confirm('Вы уверены, что хотите обновить спортивные группы?')) return;
-        const resp = await fetch('/api/admin/update-sport-groups', { method:'POST', headers:{'Content-Type':'application/json'} });
-        const data = await resp.json();
-        if (data.success) {
-            showSuccess('Спортивные группы успешно обновлены!');
-            await loadSportGroups();
-        } else {
-            showError('Ошибка при обновлении групп: ' + data.error);
-        }
-    } catch (e) {
-        console.error('Ошибка при обновлении групп', e);
-        showError('Ошибка при обновлении спортивных групп');
-    }
-}
 
-async function resetSportGroups() {
-    try {
-        if (!confirm('⚠️ ВНИМАНИЕ! Это действие удалит ВСЕ существующие спортивные группы и создаст их заново. Продолжить?')) return;
-        const resp = await fetch('/api/admin/reset-sport-groups', { method:'POST', headers:{'Content-Type':'application/json'} });
-        const data = await resp.json();
-        if (data.success) {
-            showSuccess('Спортивные группы успешно сброшены и пересозданы!');
-            await loadSportGroups();
-        } else {
-            showError('Ошибка при сбросе групп: ' + data.error);
-        }
-    } catch (e) {
-        console.error('Ошибка при сбросе групп', e);
-        showError('Ошибка при сбросе спортивных групп');
-    }
-}
 
-async function checkLowBalance() {
-    try {
-        const resp = await fetch('/api/admin/check-low-balance');
-        const data = await resp.json();
-        if (data.success) {
-            showSuccess(`Проверка завершена! Отправлено ${data.notifications_sent} уведомлений. Найдено ${data.low_balance_count} участников с низким балансом.`);
-        } else {
-            showError('Ошибка проверки балансов: ' + data.error);
-        }
-    } catch (e) {
-        console.error('Ошибка проверки балансов', e);
-        showError('Ошибка проверки балансов');
-    }
-}
+
 
 // ===== Посещаемость родителя =====
 async function loadParentAttendance() {
@@ -1151,9 +1066,12 @@ function renderParticipantAttendance(stats, participantName) {
 }
 
 // ===== Вспомогательные =====
-function getDayName(day) {
-    const days = ['Понедельник','Вторник','Среда','Четверг','Пятница','Суббота','Воскресенье'];
-    return days[day] || '';
+
+function getBalanceClass(remaining) {
+    if (remaining <= 0) return 'zero';
+    if (remaining <= 1) return 'low';
+    if (remaining <= 3) return 'medium';
+    return 'normal';
 }
 
 function showSuccess(message) { try { tg.showAlert(message); } catch(e) { alert(message); } }
@@ -1362,3 +1280,340 @@ async function openPaymentsForGroup(groupId, groupName) {
         showError('Ошибка загрузки платежей');
     }
 }
+
+// ===== Управление учениками (страница admin/students) =====
+
+// Загрузка списка всех учеников
+async function loadAllStudents() {
+    try {
+        const response = await fetch('/api/admin/students');
+        const result = await response.json();
+        
+        if (result.success) {
+            renderStudentsTable(result.students);
+        } else {
+            showError('Ошибка загрузки учеников: ' + result.error);
+        }
+    } catch (error) {
+        console.error('Ошибка загрузки учеников:', error);
+        showError('Ошибка загрузки учеников');
+    }
+}
+
+// Рендер таблицы учеников
+function renderStudentsTable(students) {
+    const container = document.getElementById('studentsTable');
+    if (!container) return;
+    
+    if (!students || students.length === 0) {
+        container.innerHTML = '<div class="no-students">Учеников пока нет</div>';
+        return;
+    }
+    
+    let html = `
+        <div class="table-header">
+            <div>ФИО</div>
+            <div>Группа</div>
+            <div>Возраст</div>
+            <div>Абонемент</div>
+            <div>Оплата</div>
+            <div>Код авторизации</div>
+            <div>Действия</div>
+        </div>
+    `;
+    
+    students.forEach(student => {
+        const statusClass = student.has_payments ? 'status-paid' : 'status-unpaid';
+        const paymentStatus = student.has_payments ? 'Да' : 'Нет';
+        
+        html += `
+            <div class="student-row">
+                <div class="student-name">${student.participant_name}</div>
+                <div class="student-group">${student.subscriptions && student.subscriptions.length > 0 ? student.subscriptions[0].sport_group_name : 'Не записан'}</div>
+                <div class="student-age">${student.age || 'Не указано'}</div>
+                <div class="subscription-type">${student.subscriptions && student.subscriptions.length > 0 ? student.subscriptions[0].subscription_type : '-'}</div>
+                <div class="payment-status ${statusClass}">${paymentStatus}</div>
+                <div class="auth-code">${student.authorization_code || 'Не создан'}</div>
+                <div class="student-actions">
+                    <button class="btn btn-primary btn-small" onclick="editStudent(${student.participant_id})">✏️</button>
+                    <button class="btn btn-danger btn-small" onclick="deleteStudent(${student.participant_id})">🗑️</button>
+                </div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
+// Открытие модального окна для добавления ученика
+async function openAddStudentModal() {
+    const modal = document.getElementById('studentModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const form = document.getElementById('studentForm');
+    
+    if (modal && modalTitle && form) {
+        modalTitle.textContent = 'Добавить ученика';
+        form.reset();
+        form.removeAttribute('data-student-id');
+        modal.style.display = 'block';
+        
+        // Сразу загружаем группы напрямую
+        try {
+            const response = await fetch('/api/sport-groups');
+            const result = await response.json();
+            
+            if (result.success && Array.isArray(result.groups)) {
+                const groupSelect = document.getElementById('sportGroup');
+                if (groupSelect) {
+                    const options = result.groups.map(g => `<option value="${g.id}">${g.name}</option>`).join('');
+                    groupSelect.innerHTML = '<option value="">Выберите группу</option>' + options;
+                }
+            }
+        } catch (error) {
+            // Не показываем ошибку пользователю
+        }
+    }
+}
+
+// Открытие модального окна для редактирования ученика
+async function editStudent(studentId) {
+    try {
+        const response = await fetch(`/api/admin/participants/${studentId}`);
+        const result = await response.json();
+        
+        if (result.success) {
+            const modal = document.getElementById('studentModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const form = document.getElementById('studentForm');
+            
+            if (modal && modalTitle && form) {
+                modalTitle.textContent = 'Редактировать ученика';
+                form.setAttribute('data-student-id', studentId);
+                
+                // Заполняем форму данными
+                document.getElementById('fullName').value = result.participant.full_name;
+                document.getElementById('parentPhone').value = result.participant.parent_phone;
+                document.getElementById('birthDate').value = result.participant.birth_date;
+                document.getElementById('medicalCertificate').checked = result.participant.medical_certificate;
+                document.getElementById('discountType').value = result.participant.discount_type || '';
+                document.getElementById('discountPercent').value = result.participant.discount_percent || 0;
+                
+                // Загружаем список групп и затем заполняем группу
+                await loadGroupsForSelect();
+                
+                // Если есть подписки, заполняем группу и тип абонемента
+                if (result.participant.subscriptions && result.participant.subscriptions.length > 0) {
+                    const subscription = result.participant.subscriptions[0];
+                    const sportGroupSelect = document.getElementById('sportGroup');
+                    if (sportGroupSelect) {
+                        sportGroupSelect.value = subscription.sport_group_id;
+                    }
+                    document.getElementById('subscriptionType').value = subscription.subscription_type;
+                }
+                
+                modal.style.display = 'block';
+            }
+        } else {
+            showError('Ошибка загрузки данных ученика: ' + result.error);
+        }
+    } catch (error) {
+        console.error('Ошибка загрузки ученика:', error);
+        showError('Ошибка загрузки данных ученика');
+    }
+}
+
+// Удаление ученика
+async function deleteStudent(studentId) {
+    if (!confirm('Вы уверены, что хотите удалить этого ученика? Это действие нельзя отменить.')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/admin/participants/${studentId}`, {
+            method: 'DELETE'
+        });
+        const result = await response.json();
+        
+        if (result.success) {
+            showSuccess('Ученик успешно удален');
+            loadAllStudents(); // Перезагружаем список
+        } else {
+            showError('Ошибка удаления ученика: ' + result.error);
+        }
+    } catch (error) {
+        console.error('Ошибка удаления ученика:', error);
+        showError('Ошибка удаления ученика');
+    }
+}
+
+// Закрытие модального окна
+function closeStudentModal() {
+    const modal = document.getElementById('studentModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+// Обновление списка учеников
+function refreshStudents() {
+    loadAllStudents();
+}
+
+// Загрузка групп для выпадающего списка
+async function loadGroupsForSelect() {
+    const groupSelect = document.getElementById('sportGroup');
+    
+    if (!groupSelect) {
+        return;
+    }
+    
+    // Если sportGroups недоступны или пусты, загружаем их напрямую
+    if (!Array.isArray(sportGroups) || sportGroups.length === 0) {
+        try {
+            const response = await fetch('/api/sport-groups');
+            const result = await response.json();
+            
+            if (result.success && Array.isArray(result.groups)) {
+                sportGroups = result.groups;
+            } else {
+                // Не показываем ошибку, просто выходим
+                return;
+            }
+        } catch (error) {
+            // Не показываем ошибку, просто выходим
+            return;
+        }
+    }
+    
+    if (Array.isArray(sportGroups) && sportGroups.length > 0) {
+        const options = sportGroups.map(g => `<option value="${g.id}">${g.name}</option>`).join('');
+        groupSelect.innerHTML = '<option value="">Выберите группу</option>' + options;
+    } else {
+        groupSelect.innerHTML = '<option value="">Нет доступных групп</option>';
+    }
+}
+
+// Обработка отправки формы ученика
+async function submitStudentForm(event) {
+    event.preventDefault();
+    
+    const form = event.target;
+    const studentId = form.getAttribute('data-student-id');
+    const isEdit = !!studentId;
+    
+    // Собираем данные формы
+    const fullName = document.getElementById('fullName').value;
+    const parentPhone = document.getElementById('parentPhone').value;
+    const birthDate = document.getElementById('birthDate').value;
+    const sportGroupId = document.getElementById('sportGroup').value;
+    const subscriptionType = document.getElementById('subscriptionType').value;
+    const medicalCertificate = document.getElementById('medicalCertificate').checked;
+    const discountType = document.getElementById('discountType').value;
+    const discountPercent = parseInt(document.getElementById('discountPercent').value) || 0;
+    
+    const formData = {
+        full_name: fullName,
+        parent_phone: parentPhone,
+        birth_date: birthDate,
+        sport_group_id: parseInt(sportGroupId),
+        subscription_type: subscriptionType,
+        total_lessons: getLessonsCount(subscriptionType),
+        medical_certificate: medicalCertificate,
+        discount_type: discountType,
+        discount_percent: discountPercent
+    };
+    
+    // Проверяем обязательные поля
+    if (!formData.full_name || !formData.parent_phone || !formData.birth_date || !formData.sport_group_id || !formData.subscription_type) {
+        const missingFields = [];
+        if (!formData.full_name) missingFields.push('ФИО');
+        if (!formData.parent_phone) missingFields.push('Телефон родителя');
+        if (!formData.birth_date) missingFields.push('Дата рождения');
+        if (!formData.sport_group_id) missingFields.push('Спортивная группа');
+        if (!formData.subscription_type) missingFields.push('Тип абонемента');
+        
+        showError(`Пожалуйста, заполните все обязательные поля: ${missingFields.join(', ')}`);
+        return;
+    }
+    
+    try {
+        const url = isEdit ? `/api/admin/participants/${studentId}` : '/api/admin/participants';
+        const method = isEdit ? 'PUT' : 'POST';
+        
+        const response = await fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showSuccess(isEdit ? 'Ученик успешно обновлен' : 'Ученик успешно добавлен');
+            if (result.authorization_code) {
+                showSuccess(`Код авторизации: ${result.authorization_code}`);
+            }
+            closeStudentModal();
+            loadAllStudents(); // Перезагружаем список
+        } else {
+            showError('Ошибка: ' + result.error);
+        }
+    } catch (error) {
+        console.error('Ошибка сохранения ученика:', error);
+        showError('Ошибка сохранения ученика: ' + error.message);
+    }
+}
+
+// Функция возврата назад
+function goBack() {
+    window.history.back();
+}
+
+// Инициализация страницы учеников при загрузке
+if (document.getElementById('studentsTable')) {
+    // Загружаем учеников сразу
+    loadAllStudents();
+    
+    // Привязываем обработчик формы
+    const form = document.getElementById('studentForm');
+    if (form) {
+        form.addEventListener('submit', submitStudentForm);
+    }
+    
+    // Привязываем обработчик изменения даты рождения для автоматического расчета возраста
+    const birthDateInput = document.getElementById('birthDate');
+    
+    if (birthDateInput) {
+        birthDateInput.addEventListener('change', function() {
+            calculateAgeFromBirthDate(this.value);
+        });
+    }
+}
+
+// Функция для расчета возраста из даты рождения
+function calculateAgeFromBirthDate(birthDateString) {
+    if (!birthDateString) return;
+    
+    const birthDate = new Date(birthDateString);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+    }
+    
+    // Если есть поле возраста, обновляем его (хотя оно должно быть скрыто)
+    const ageInput = document.getElementById('age');
+    if (ageInput) {
+        ageInput.value = age;
+    }
+    
+    return age;
+}
+
+
+
+

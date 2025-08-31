@@ -5,10 +5,44 @@ from config import Config
 import json
 from datetime import datetime, timedelta, date
 import logging
+import re
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+
+def format_schedule_for_display(schedules):
+    """Форматирует расписание для отображения в читаемом виде"""
+    if not schedules:
+        return "Расписания пока нет"
+
+    days = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье']
+
+    # Группируем по дням недели
+    schedule_by_day = {}
+    for schedule in schedules:
+        # Добавляем проверку на корректность day_of_week
+        if 0 <= schedule.day_of_week < len(days):
+            day_name = days[schedule.day_of_week]
+            if day_name not in schedule_by_day:
+                schedule_by_day[day_name] = []
+            schedule_by_day[day_name].append({
+                'start': schedule.start_time.strftime('%H:%M'),
+                'end': schedule.end_time.strftime('%H:%M')
+            })
+        else:
+            logger.warning(f"Invalid day_of_week value: {schedule.day_of_week}")
+
+    # Формируем читаемый текст
+    schedule_texts = []
+    for day_name in days:
+        if day_name in schedule_by_day:
+            times = schedule_by_day[day_name]
+            time_texts = [f"{time['start']}-{time['end']}" for time in times]
+            schedule_texts.append(f"{day_name} {', '.join(time_texts)}")
+
+    return ", ".join(schedule_texts) if schedule_texts else "Расписания пока нет"
 
 def create_app():
     app = Flask(__name__)
@@ -33,11 +67,53 @@ def init_sport_groups():
     else:
         update_sport_groups()
 
+def create_schedule_from_text(sport_group_id, schedule_text):
+    """Создает записи расписания на основе текстового описания"""
+    try:
+        # Парсим текстовое расписание и создаем записи в таблице Schedule
+        schedule_mapping = {
+            'Понедельник': 0,
+            'Вторник': 1,
+            'Среда': 2,
+            'Четверг': 3,
+            'Пятница': 4,
+            'Суббота': 5,
+            'Воскресенье': 6
+        }
+        
+        # Простой парсинг времени (формат: "19:30 до 20:20")
+        import re
+        time_pattern = r'(\d{1,2}):(\d{2})\s+до\s+(\d{1,2}):(\d{2})'
+        
+        # Разбиваем по дням недели
+        for day_name, day_number in schedule_mapping.items():
+            if day_name in schedule_text:
+                # Ищем время для этого дня
+                times = re.findall(time_pattern, schedule_text)
+                for time_match in times:
+                    start_hour, start_minute, end_hour, end_minute = map(int, time_match)
+                    
+                    # Создаем запись расписания
+                    schedule = Schedule(
+                        sport_group_id=sport_group_id,
+                        day_of_week=day_number,
+                        start_time=datetime.strptime(f"{start_hour:02d}:{start_minute:02d}", "%H:%M").time(),
+                        end_time=datetime.strptime(f"{end_hour:02d}:{end_minute:02d}", "%H:%M").time()
+                    )
+                    db.session.add(schedule)
+        
+        db.session.commit()
+        print(f"Расписание создано для группы {sport_group_id}")
+        
+    except Exception as e:
+        print(f"Ошибка создания расписания для группы {sport_group_id}: {e}")
+        db.session.rollback()
+
 def create_sport_groups():
     """Создание новых спортивных групп"""
     groups = [
         {
-            'name': 'Дзюдо младшая группа А (4-6 лет)',
+            'name': 'Дзюдо младшая группа А',
             'description': 'Группа для детей 4-6 лет',
             'detailed_description': 'Дзюдо для самых маленьких! Наши занятия направлены на развитие координации, гибкости и дисциплины у детей дошкольного возраста. В игровой форме дети изучают основы дзюдо, учатся работать в команде и развивают уверенность в себе. Продолжительность занятия 50 минут. Форма одежды кимано (если нет - шорты, футболка), с собой негазированную питьевую воду 0.5 л объёмом, сменная обувь. Занятия проходят босиком.',
             'schedule': 'Понедельник, Среда, Пятница с 19:30 до 20:20',
@@ -50,7 +126,7 @@ def create_sport_groups():
             'age_group': '4-6 лет'
         },
         {
-            'name': 'Дзюдо младшая группа Б (4-6 лет)',
+            'name': 'Дзюдо младшая группа Б',
             'description': 'Группа для детей 4-6 лет',
             'detailed_description': 'Дзюдо для самых маленьких! Наши занятия направлены на развитие координации, гибкости и дисциплины у детей дошкольного возраста. В игровой форме дети изучают основы дзюдо, учатся работать в команде и развивают уверенность в себе. Продолжительность занятия 50 минут. Форма одежды кимано (если нет - шорты, футболка), с собой негазированную питьевую воду 0.5 л объёмом, сменная обувь. Занятия проходят босиком.',
             'schedule': 'Вторник, Четверг с 18:30 до 19:20, Суббота с 10:00 до 10:50',
@@ -63,7 +139,7 @@ def create_sport_groups():
             'age_group': '4-6 лет'
         },
         {
-            'name': 'Дзюдо старшая группа А (7+ лет)',
+            'name': 'Дзюдо старшая группа А',
             'description': 'Группа для детей 7 лет и старше',
             'detailed_description': 'Серьезные тренировки по дзюдо для детей школьного возраста. Программа включает изучение техники, участие в соревнованиях, развитие физических качеств и спортивного характера. Продолжительность занятия 50 минут. Форма одежды кимано (если нет - шорты, футболка), с собой негазированную питьевую воду 0.5 л объёмом, сменная обувь. Занятия проходят босиком.',
             'schedule': 'Понедельник, Среда, Пятница с 20:30 до 21:20',
@@ -76,7 +152,7 @@ def create_sport_groups():
             'age_group': '7+ лет'
         },
         {
-            'name': 'Дзюдо старшая группа Б (7+ лет)',
+            'name': 'Дзюдо старшая группа Б',
             'description': 'Группа для детей 7 лет и старше',
             'detailed_description': 'Серьезные тренировки по дзюдо для детей школьного возраста. Программа включает изучение техники, участие в соревнованиях, развитие физических качеств и спортивного характера. Продолжительность занятия 50 минут. Форма одежды кимано (если нет - шорты, футболка), с собой негазированную питьевую воду 0.5 л объёмом, сменная обувь. Занятия проходят босиком.',
             'schedule': 'Понедельник, Среда, Пятница с 10:00 до 10:50',
@@ -89,7 +165,7 @@ def create_sport_groups():
             'age_group': '7+ лет'
         },
         {
-            'name': 'Дзюдо старшая группа В (7+ лет)',
+            'name': 'Дзюдо старшая группа В',
             'description': 'Группа для детей 7 лет и старше',
             'detailed_description': 'Серьезные тренировки по дзюдо для детей школьного возраста. Программа включает изучение техники, участие в соревнованиях, развитие физических качеств и спортивного характера. Продолжительность занятия 50 минут. Форма одежды кимано (если нет - шорты, футболка), с собой негазированную питьевую воду 0.5 л объёмом, сменная обувь. Занятия проходят босиком.',
             'schedule': 'Вторник, Четверг с 19:30 до 20:20, Суббота с 11:00 до 11:50',
@@ -102,7 +178,7 @@ def create_sport_groups():
             'age_group': '7+ лет'
         },
         {
-            'name': 'Гимнастика (3+ лет)',
+            'name': 'Гимнастика',
             'description': 'Гимнастика для детей от 3х до 5 лет',
             'detailed_description': 'Гимнастика - отлично подойдёт для мальчиков и девочек, включающие в общеразвивающие упражнения, с уклоном на растяжку, координацию, статические упражнения. Весь тренировочный процесс контролируется спортивной дисциплиной. Занятия продолжительностью 50 минут, форма одежды (шорты, футболка), с собой теплую воду негазированную и сменную обувь.',
             'schedule': 'Понедельник, Среда, Пятница с 18:30 до 19:20',
@@ -115,7 +191,7 @@ def create_sport_groups():
             'age_group': '3-5 лет'
         },
         {
-            'name': 'ММА (14+ лет)',
+            'name': 'ММА',
             'description': 'Смешанные единоборства для подростков от 14+ и взрослых',
             'detailed_description': 'Отлично подойдёт для подростков, которые хотят научится самообороне, принимать участие в соревнованиях и прогрессировать с каждой тренировкой. Для взрослых отлично подойдут занятия для тех, кто всегда мечтал попробовать для себя что-то новое, тренировки в удовольствие, под присмотром грамотного тренерского состава, обучение техническому арсеналу единоборств, развитие выносливости, работа над физической формой.',
             'schedule': 'Вторник, Четверг с 21:30 до 22:30',
@@ -128,7 +204,7 @@ def create_sport_groups():
             'age_group': '14+ лет'
         },
         {
-            'name': 'Женский фитнес (18+ лет)',
+            'name': 'Женский фитнес',
             'description': 'Фитнес программы для женщин', 
             'detailed_description': 'Специально разработанные программы фитнеса для женщин всех возрастов. Включают кардио-тренировки, силовые упражнения, растяжку и функциональный тренинг.',
             'schedule': 'Расписание в проработке',
@@ -144,6 +220,11 @@ def create_sport_groups():
     for group_data in groups:
         group = SportGroup(**group_data)
         db.session.add(group)
+        db.session.flush()  # Получаем ID группы
+        
+        # Создаем расписание для группы
+        if group_data['schedule'] != 'Расписание в проработке':
+            create_schedule_from_text(group.id, group_data['schedule'])
     
     db.session.commit()
     print("Спортивные группы созданы успешно!")
@@ -159,7 +240,7 @@ def update_sport_groups():
     # Определяем новые/обновленные группы
     updated_groups = [
         {
-            'name': 'Дзюдо младшая группа А (4-6 лет)',
+            'name': 'Дзюдо младшая группа А',
             'description': 'Группа для детей 4-6 лет',
             'detailed_description': 'Дзюдо для самых маленьких! Наши занятия направлены на развитие координации, гибкости и дисциплины у детей дошкольного возраста. В игровой форме дети изучают основы дзюдо, учатся работать в команде и развивают уверенность в себе. Продолжительность занятия 50 минут. Форма одежды кимано (если нет - шорты, футболка), с собой негазированную питьевую воду 0.5 л объёмом, сменная обувь. Занятия проходят босиком.',
             'schedule': 'Понедельник, Среда, Пятница с 19:30 до 20:20',
@@ -172,7 +253,7 @@ def update_sport_groups():
             'age_group': '4-6 лет'
         },
         {
-            'name': 'Дзюдо младшая группа Б (4-6 лет)',
+            'name': 'Дзюдо младшая группа Б',
             'description': 'Группа для детей 4-6 лет',
             'detailed_description': 'Дзюдо для самых маленьких! Наши занятия направлены на развитие координации, гибкости и дисциплины у детей дошкольного возраста. В игровой форме дети изучают основы дзюдо, учатся работать в команде и развивают уверенность в себе. Продолжительность занятия 50 минут. Форма одежды кимано (если нет - шорты, футболка), с собой негазированную питьевую воду 0.5 л объёмом, сменная обувь. Занятия проходят босиком.',
             'schedule': 'Вторник, Четверг с 18:30 до 19:20, Суббота с 10:00 до 10:50',
@@ -185,7 +266,7 @@ def update_sport_groups():
             'age_group': '4-6 лет'
         },
         {
-            'name': 'Дзюдо старшая группа А (7+ лет)',
+            'name': 'Дзюдо старшая группа А',
             'description': 'Группа для детей 7 лет и старше',
             'detailed_description': 'Серьезные тренировки по дзюдо для детей школьного возраста. Программа включает изучение техники, участие в соревнованиях, развитие физических качеств и спортивного характера. Продолжительность занятия 50 минут. Форма одежды кимано (если нет - шорты, футболка), с собой негазированную питьевую воду 0.5 л объёмом, сменная обувь. Занятия проходят босиком.',
             'schedule': 'Понедельник, Среда, Пятница с 20:30 до 21:20',
@@ -198,7 +279,7 @@ def update_sport_groups():
             'age_group': '7+ лет'
         },
         {
-            'name': 'Дзюдо старшая группа Б (7+ лет)',
+            'name': 'Дзюдо старшая группа Б',
             'description': 'Группа для детей 7 лет и старше',
             'detailed_description': 'Серьезные тренировки по дзюдо для детей школьного возраста. Программа включает изучение техники, участие в соревнованиях, развитие физических качеств и спортивного характера. Продолжительность занятия 50 минут. Форма одежды кимано (если нет - шорты, футболка), с собой негазированную питьевую воду 0.5 л объёмом, сменная обувь. Занятия проходят босиком.',
             'schedule': 'Понедельник, Среда, Пятница с 10:00 до 10:50',
@@ -211,7 +292,7 @@ def update_sport_groups():
             'age_group': '7+ лет'
         },
         {
-            'name': 'Дзюдо старшая группа В (7+ лет)',
+            'name': 'Дзюдо старшая группа В',
             'description': 'Группа для детей 7 лет и старше',
             'detailed_description': 'Серьезные тренировки по дзюдо для детей школьного возраста. Программа включает изучение техники, участие в соревнованиях, развитие физических качеств и спортивного характера. Продолжительность занятия 50 минут. Форма одежды кимано (если нет - шорты, футболка), с собой негазированную питьевую воду 0.5 л объёмом, сменная обувь. Занятия проходят босиком.',
             'schedule': 'Вторник, Четверг с 19:30 до 20:20, Суббота с 11:00 до 11:50',
@@ -224,7 +305,7 @@ def update_sport_groups():
             'age_group': '7+ лет'
         },
         {
-            'name': 'Гимнастика (3+ лет)',
+            'name': 'Гимнастика',
             'description': 'Гимнастика для детей от 3х до 5 лет',
             'detailed_description': 'Гимнастика - отлично подойдёт для мальчиков и девочек, включающие в общеразвивающие упражнения, с уклоном на растяжку, координацию, статические упражнения. Весь тренировочный процесс контролируется спортивной дисциплиной. Занятия продолжительностью 50 минут, форма одежды (шорты, футболка), с собой теплую воду негазированную и сменную обувь.',
             'schedule': 'Понедельник, Среда, Пятница с 18:30 до 19:20',
@@ -237,7 +318,7 @@ def update_sport_groups():
             'age_group': '3-5 лет'
         },
         {
-            'name': 'ММА (14+ лет)',
+            'name': 'ММА',
             'description': 'Смешанные единоборства для подростков от 14+ и взрослых',
             'detailed_description': 'Отлично подойдёт для подростков, которые хотят научится самообороне, принимать участие в соревнованиях и прогрессировать с каждой тренировкой. Для взрослых отлично подойдут занятия для тех, кто всегда мечтал попробовать для себя что-то новое, тренировки в удовольствие, под присмотром грамотного тренерского состава, обучение техническому арсеналу единоборств, развитие выносливости, работа над физической формой.',
             'schedule': 'Вторник, Четверг с 21:30 до 22:30',
@@ -250,7 +331,7 @@ def update_sport_groups():
             'age_group': '14+ лет'
         },
         {
-            'name': 'Женский фитнес (18+ лет)',
+            'name': 'Женский фитнес',
             'description': 'Фитнес программы для женщин', 
             'detailed_description': 'Специально разработанные программы фитнеса для женщин всех возрастов. Включают кардио-тренировки, силовые упражнения, растяжку и функциональный тренинг.',
             'schedule': 'Расписание в проработке',
@@ -272,11 +353,25 @@ def update_sport_groups():
             group = existing_groups_dict[group_data['name']]
             for key, value in group_data.items():
                 setattr(group, key, value)
+            
+            # Обновляем расписание
+            if group_data['schedule'] != 'Расписание в проработке':
+                # Удаляем старое расписание
+                Schedule.query.filter_by(sport_group_id=group.id).delete()
+                # Создаем новое расписание
+                create_schedule_from_text(group.id, group_data['schedule'])
+            
             updated_count += 1
         else:
             # Создаем новую группу
             group = SportGroup(**group_data)
             db.session.add(group)
+            db.session.flush()  # Получаем ID группы
+            
+            # Создаем расписание для новой группы
+            if group_data['schedule'] != 'Расписание в проработке':
+                create_schedule_from_text(group.id, group_data['schedule'])
+            
             created_count += 1
     
     db.session.commit()
@@ -285,7 +380,7 @@ def update_sport_groups():
 app = create_app()
 
 
-@app.route('/admin/dashboard')
+@app.route('/index')
 def admin_dashboard():
     logger.info("Загрузка admin dashboard")
     if session.get('role') != 'admin':
@@ -301,29 +396,148 @@ def admin_dashboard():
             Subscription.remaining_lessons <= 1,
             Subscription.is_active == True
         ).join(Participant).limit(5).all()
-        return render_template('admin/dashboard.html',
+        return render_template('index.html',
                               total_participants=total_participants,
                               active_subscriptions=active_subscriptions,
                               pending_payments=pending_payments,
                               recent_payments=recent_payments,
                               low_balance_participants=low_balance_participants)
     except Exception as e:
-        logger.error(f"Ошибка при рендеринге admin/dashboard.html: {e}")
+        logger.error(f"Ошибка при рендеринге index.html: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
 @app.route('/')
 def index():
     """Главная страница приложения"""
+    logger.info(f"Попытка доступа к главной странице. Роль в сессии: {session.get('role')}")
+    logger.info(f"Полная сессия: {dict(session)}")
+    
     # Если админ уже авторизован (сессия установлена), перенаправляем сразу в админ-панель
     if session.get('role') == 'admin':
+        logger.info("Админ авторизован, редирект на admin_dashboard")
         return redirect(url_for('admin_dashboard'))
+    
+    logger.info("Рендерим index.html")
     return render_template('index.html')
 
 @app.route('/group/<int:group_id>')
 def group_details(group_id):
     """Страница с подробной информацией о группе"""
     return render_template('group_details.html')
+
+@app.route('/admin/group/<int:group_id>')
+def admin_group_details(group_id):
+    """Админ панель группы"""
+    if session.get('role') != 'admin':
+        return redirect(url_for('index'))
+    return render_template('admin/group_details.html')
+
+@app.route('/admin/groups')
+def admin_groups():
+    """Список всех групп для админа"""
+    logger.info(f"Попытка доступа к /admin/groups. Роль в сессии: {session.get('role')}")
+    logger.info(f"Полная сессия: {dict(session)}")
+    
+    if session.get('role') != 'admin':
+        logger.warning(f"Доступ запрещен для роли: {session.get('role')}")
+        return redirect(url_for('index'))
+    
+    logger.info("Доступ разрешен, рендерим admin/groups.html")
+    return render_template('admin/groups.html')
+
+@app.route('/admin/students')
+def admin_students():
+    """Страница управления учениками для админа"""
+    logger.info(f"Попытка доступа к /admin/students. Роль в сессии: {session.get('role')}")
+    
+    if session.get('role') != 'admin':
+        logger.warning(f"Доступ запрещен для роли: {session.get('role')}")
+        return redirect(url_for('index'))
+    
+    logger.info("Доступ разрешен, рендерим admin/students.html")
+    return render_template('admin/students.html')
+
+
+
+@app.route('/api/admin/students')
+def admin_students_api():
+    """Получить список всех учеников с финансовой информацией"""
+    try:
+        if session.get('role') != 'admin':
+            return jsonify({'success': False, 'error': 'Access denied'}), 403
+
+        # Получаем всех участников
+        participants = Participant.query.all()
+
+        students_data = []
+        for participant in participants:
+            # Получаем активные подписки участника
+            subscriptions = Subscription.query.filter_by(
+                participant_id=participant.id,
+                is_active=True
+            ).all()
+
+            participant_subscriptions = []
+            total_paid_all = 0
+            total_remaining_all = 0
+
+            for subscription in subscriptions:
+                # Получаем все платежи для этой подписки
+                payments = Payment.query.filter_by(subscription_id=subscription.id).all()
+                total_paid = sum(payment.amount for payment in payments if payment.status == 'approved')
+
+                total_paid_all += total_paid
+                total_remaining_all += subscription.remaining_lessons
+
+                participant_subscriptions.append({
+                    'subscription_id': subscription.id,
+                    'sport_group_name': subscription.sport_group.name,
+                    'subscription_type': subscription.subscription_type,
+                    'total_lessons': subscription.total_lessons,
+                    'remaining_lessons': subscription.remaining_lessons,
+                    'total_paid': total_paid,
+                    'start_date': subscription.start_date.strftime('%Y-%m-%d'),
+                    'end_date': subscription.end_date.strftime('%Y-%m-%d')
+                })
+
+            # Вычисляем возраст
+            today = date.today()
+            age = today.year - participant.birth_date.year - ((today.month, today.day) < (participant.birth_date.month, participant.birth_date.day))
+
+            # Берем последний код авторизации
+            latest_auth_code = AuthorizationCode.query.filter_by(participant_id=participant.id).order_by(AuthorizationCode.created_at.desc()).first()
+            auth_code_value = latest_auth_code.code if latest_auth_code else None
+
+            # Добавляем всех участников, независимо от наличия оплаченных подписок
+            students_data.append({
+                'participant_id': participant.id,
+                'participant_name': participant.full_name,
+                'parent_phone': participant.parent_phone,
+                'birth_date': participant.birth_date.strftime('%Y-%m-%d'),
+                'age': age,
+                'medical_certificate': participant.medical_certificate,
+                'discount_type': participant.discount_type,
+                'discount_percent': participant.discount_percent,
+                'authorization_code': auth_code_value,
+                'subscriptions': participant_subscriptions,
+                'total_paid_all': total_paid_all,
+                'total_remaining_all': total_remaining_all,
+                'subscription_count': len(participant_subscriptions),
+                'has_payments': total_paid_all > 0
+            })
+
+        # Сортируем по имени участника
+        students_data.sort(key=lambda x: x['participant_name'])
+
+        return jsonify({
+            'success': True,
+            'students': students_data
+        })
+
+    except Exception as e:
+        logger.error(f"Error in admin_students_api: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/api/init', methods=['POST'])
 def init_user():
@@ -341,8 +555,6 @@ def init_user():
         if not user:
             # Определяем роль пользователя
             role = 'admin' if telegram_id == app.config['ADMIN_TELEGRAM_ID'] else 'parent'
-            logger.info(
-                f"Received telegram_id: {telegram_id}, ADMIN_TELEGRAM_ID: {app.config['ADMIN_TELEGRAM_ID']}, assigned role: {role}")
             
             # Создаем нового пользователя
             user = User(
@@ -379,9 +591,14 @@ def get_sport_groups():
     """Получение списка спортивных групп"""
     try:
         groups = SportGroup.query.all()
-        return jsonify({
-            'success': True,
-            'groups': [{
+        groups_data = []
+        
+        for group in groups:
+            # Получаем реальное расписание из БД
+            schedules = Schedule.query.filter_by(sport_group_id=group.id).all()
+            formatted_schedule = format_schedule_for_display(schedules)
+            
+            groups_data.append({
                 'id': group.id,
                 'name': group.name,
                 'description': group.description,
@@ -393,8 +610,12 @@ def get_sport_groups():
                 'price_single': group.price_single,
                 'category': group.category,
                 'age_group': group.age_group,
-                'schedule': group.schedule
-            } for group in groups]
+                'schedule': formatted_schedule
+            })
+        
+        return jsonify({
+            'success': True,
+            'groups': groups_data
         })
     except Exception as e:
         logger.error(f"Error in get_sport_groups: {e}")
@@ -435,21 +656,54 @@ def get_sport_group_details(group_id):
         logger.error(f"Error in get_sport_group_details: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
+
+@app.route('/schedule')
+def schedule_page():
+    """Страница с расписанием всех групп"""
+    try:
+        # Получаем все группы с их расписанием
+        groups = SportGroup.query.all()
+        groups_with_schedule = []
+
+        for group in groups:
+            schedules = Schedule.query.filter_by(sport_group_id=group.id).all()
+            formatted_schedule = format_schedule_for_display(schedules)
+
+            groups_with_schedule.append({
+                'id': group.id,
+                'name': group.name,
+                'schedule': formatted_schedule,
+                'trainer': group.trainer_name
+            })
+
+        return render_template('schedule.html', groups=groups_with_schedule)
+    except Exception as e:
+        logger.error(f"Error in schedule_page: {e}")
+        return render_template('schedule.html', groups=[], error=str(e))
+
+
 @app.route('/api/schedule/<int:group_id>')
 def get_schedule(group_id):
     """Получение расписания для конкретной группы"""
     try:
         schedules = Schedule.query.filter_by(sport_group_id=group_id).all()
         days = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье']
-        
+
+        schedule_data = []
+        for schedule in schedules:
+            if 0 <= schedule.day_of_week < len(days):
+                schedule_data.append({
+                    'id': schedule.id,
+                    'day': days[schedule.day_of_week],
+                    'start_time': schedule.start_time.strftime('%H:%M'),
+                    'end_time': schedule.end_time.strftime('%H:%M')
+                })
+            else:
+                logger.warning(f"Invalid day_of_week {schedule.day_of_week} for schedule {schedule.id}")
+
         return jsonify({
             'success': True,
-            'schedule': [{
-                'id': schedule.id,
-                'day': days[schedule.day_of_week],
-                'start_time': schedule.start_time.strftime('%H:%M'),
-                'end_time': schedule.end_time.strftime('%H:%M')
-            } for schedule in schedules]
+            'schedule': schedule_data
         })
     except Exception as e:
         logger.error(f"Error in get_schedule: {e}")
@@ -485,6 +739,12 @@ def admin_participants():
         try:
             data = request.get_json()
             
+            # Проверяем обязательные поля
+            required_fields = ['full_name', 'parent_phone', 'birth_date']
+            for field in required_fields:
+                if not data.get(field):
+                    return jsonify({'success': False, 'error': f'Missing required field: {field}'}), 400
+            
             # Создаем нового участника
             participant = Participant(
                 user_id=session.get('user_id'),
@@ -503,12 +763,16 @@ def admin_participants():
             if data.get('sport_group_id'):
                 sport_group = SportGroup.query.get(data['sport_group_id'])
                 if sport_group:
+                    # Определяем тип абонемента и количество занятий
+                    subscription_type = data.get('subscription_type', '8 занятий')
+                    total_lessons = data.get('total_lessons', 8)
+                    
                     subscription = Subscription(
                         participant_id=participant.id,
                         sport_group_id=data['sport_group_id'],
-                        subscription_type='8 занятий',  # По умолчанию
-                        total_lessons=8,
-                        remaining_lessons=8,
+                        subscription_type=subscription_type,
+                        total_lessons=total_lessons,
+                        remaining_lessons=total_lessons,
                         start_date=datetime.now().date(),
                         end_date=(datetime.now() + timedelta(days=30)).date(),
                         is_active=True
@@ -532,6 +796,83 @@ def admin_participants():
         except Exception as e:
             logger.error(f"Error in admin_participants POST: {e}")
             return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/admin/participants/<int:participant_id>', methods=['GET', 'PUT', 'DELETE'])
+def admin_participant_manage(participant_id):
+    """Управление конкретным участником (получение, обновление и удаление)"""
+    if session.get('role') != 'admin':
+        return jsonify({'success': False, 'error': 'Access denied'}), 403
+    
+    try:
+        participant = Participant.query.get_or_404(participant_id)
+        
+        if request.method == 'GET':
+            # Получаем подписки участника
+            subscriptions = Subscription.query.filter_by(participant_id=participant.id).all()
+            subscriptions_data = []
+            
+            for subscription in subscriptions:
+                subscriptions_data.append({
+                    'id': subscription.id,
+                    'sport_group_id': subscription.sport_group_id,
+                    'sport_group_name': subscription.sport_group.name,
+                    'subscription_type': subscription.subscription_type,
+                    'total_lessons': subscription.total_lessons,
+                    'remaining_lessons': subscription.remaining_lessons,
+                    'is_active': subscription.is_active
+                })
+            
+            return jsonify({
+                'success': True,
+                'participant': {
+                    'id': participant.id,
+                    'full_name': participant.full_name,
+                    'parent_phone': participant.parent_phone,
+                    'birth_date': participant.birth_date.strftime('%Y-%m-%d'),
+                    'medical_certificate': participant.medical_certificate,
+                    'discount_type': participant.discount_type,
+                    'discount_percent': participant.discount_percent,
+                    'subscriptions': subscriptions_data
+                }
+            })
+        
+        elif request.method == 'DELETE':
+            # Удаляем связанные записи
+            AuthorizationCode.query.filter_by(participant_id=participant_id).delete()
+            Payment.query.join(Subscription).filter(Subscription.participant_id == participant_id).delete()
+            Subscription.query.filter_by(participant_id=participant_id).delete()
+            AttendanceRecord.query.join(Attendance).join(SportGroup).filter(Attendance.sport_group_id.in_([s.id for s in participant.subscriptions])).delete()
+            
+            # Удаляем участника
+            db.session.delete(participant)
+            db.session.commit()
+            
+            return jsonify({'success': True, 'message': 'Участник успешно удален'})
+        
+        elif request.method == 'PUT':
+            data = request.get_json()
+            
+            # Обновляем данные участника
+            if 'full_name' in data:
+                participant.full_name = data['full_name']
+            if 'parent_phone' in data:
+                participant.parent_phone = data['parent_phone']
+            if 'birth_date' in data:
+                participant.birth_date = datetime.strptime(data['birth_date'], '%Y-%m-%d').date()
+            if 'medical_certificate' in data:
+                participant.medical_certificate = data['medical_certificate']
+            if 'discount_type' in data:
+                participant.discount_type = data['discount_type']
+            if 'discount_percent' in data:
+                participant.discount_percent = data['discount_percent']
+            
+            db.session.commit()
+            
+            return jsonify({'success': True, 'message': 'Участник успешно обновлен'})
+    
+    except Exception as e:
+        logger.error(f"Error in admin_participant_manage: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/api/admin/schedule', methods=['GET', 'POST'])
 def admin_schedule():
@@ -610,9 +951,9 @@ def admin_schedule():
             logger.error(f"Error in admin_schedule POST: {e}")
             return jsonify({'success': False, 'error': str(e)}), 500
 
-@app.route('/api/admin/schedule/<int:schedule_id>', methods=['DELETE'])
-def delete_schedule(schedule_id):
-    """Удаление расписания"""
+@app.route('/api/admin/schedule/<int:schedule_id>', methods=['PUT', 'DELETE'])
+def manage_schedule(schedule_id):
+    """Управление расписанием (обновление и удаление)"""
     try:
         if session.get('role') != 'admin':
             return jsonify({'success': False, 'error': 'Access denied'}), 403
@@ -621,13 +962,27 @@ def delete_schedule(schedule_id):
         if not schedule:
             return jsonify({'success': False, 'error': 'Расписание не найдено'}), 404
         
-        db.session.delete(schedule)
-        db.session.commit()
+        if request.method == 'DELETE':
+            db.session.delete(schedule)
+            db.session.commit()
+            return jsonify({'success': True, 'message': 'Расписание удалено'})
         
-        return jsonify({'success': True, 'message': 'Расписание удалено'})
+        elif request.method == 'PUT':
+            data = request.get_json()
+            
+            # Обновляем только переданные поля
+            if 'day_of_week' in data and data['day_of_week'] is not None:
+                schedule.day_of_week = int(data['day_of_week'])
+            if 'start_time' in data and data['start_time'] is not None:
+                schedule.start_time = datetime.strptime(data['start_time'], '%H:%M').time()
+            if 'end_time' in data and data['end_time'] is not None:
+                schedule.end_time = datetime.strptime(data['end_time'], '%H:%M').time()
+            
+            db.session.commit()
+            return jsonify({'success': True, 'message': 'Расписание обновлено'})
         
     except Exception as e:
-        logger.error(f"Error in delete_schedule: {e}")
+        logger.error(f"Error in manage_schedule: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/api/admin/payments')
@@ -725,89 +1080,9 @@ def reject_payment(payment_id):
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
-@app.route('/api/admin/students')
-def admin_students():
-    """Получить список всех учеников с финансовой информацией"""
-    try:
-        if session.get('role') != 'admin':
-            return jsonify({'success': False, 'error': 'Access denied'}), 403
-
-        # Получаем всех участников с их подписками и платежами
-        participants = Participant.query.all()
-
-        students_data = []
-        for participant in participants:
-            # Получаем активные подписки участника
-            subscriptions = Subscription.query.filter_by(
-                participant_id=participant.id,
-                is_active=True
-            ).all()
-
-            participant_subscriptions = []
-            total_paid_all = 0
-            total_remaining_all = 0
-
-            for subscription in subscriptions:
-                # Получаем подтвержденные платежи для этой подписки
-                payments = Payment.query.filter_by(
-                    subscription_id=subscription.id,
-                    status='approved'
-                ).all()
-
-                total_paid = sum(payment.amount for payment in payments)
-
-                # Добавляем подписку только если есть подтвержденные платежи
-                if total_paid > 0:
-                    total_paid_all += total_paid
-                    total_remaining_all += subscription.remaining_lessons
-
-                    participant_subscriptions.append({
-                        'subscription_id': subscription.id,
-                        'sport_group_name': subscription.sport_group.name,
-                        'subscription_type': subscription.subscription_type,
-                        'total_lessons': subscription.total_lessons,
-                        'remaining_lessons': subscription.remaining_lessons,
-                        'total_paid': total_paid,
-                        'start_date': subscription.start_date.strftime('%Y-%m-%d'),
-                        'end_date': subscription.end_date.strftime('%Y-%m-%d')
-                    })
-
-            # Берем последний неиспользованный (или последний созданный) код авторизации
-            latest_auth_code = AuthorizationCode.query.filter_by(participant_id=participant.id).order_by(AuthorizationCode.created_at.desc()).first()
-            auth_code_value = latest_auth_code.code if latest_auth_code else None
-
-            # Добавляем участника только если у него есть оплаченные подписки
-            if participant_subscriptions:
-                students_data.append({
-                    'participant_id': participant.id,
-                    'participant_name': participant.full_name,
-                    'parent_phone': participant.parent_phone,
-                    'birth_date': participant.birth_date.strftime('%Y-%m-%d'),
-                    'medical_certificate': participant.medical_certificate,
-                    'discount_type': participant.discount_type,
-                    'discount_percent': participant.discount_percent,
-                    'authorization_code': auth_code_value,
-                    'subscriptions': participant_subscriptions,
-                    'total_paid_all': total_paid_all,
-                    'total_remaining_all': total_remaining_all,
-                    'subscription_count': len(participant_subscriptions)
-                })
-
-        # Сортируем по имени участника
-        students_data.sort(key=lambda x: x['participant_name'])
-
-        return jsonify({
-            'success': True,
-            'students': students_data
-        })
-
-    except Exception as e:
-        logger.error(f"Error in admin_students: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
-
 @app.route('/api/admin/group/<int:group_id>/students')
 def admin_group_students(group_id):
-    """Получить список учеников конкретной группы с оплаченными подписками"""
+    """Получить список учеников конкретной группы"""
     try:
         if session.get('role') != 'admin':
             return jsonify({'success': False, 'error': 'Access denied'}), 403
@@ -820,37 +1095,39 @@ def admin_group_students(group_id):
         
         students_data = []
         for subscription in subscriptions:
-            # Проверяем, есть ли подтвержденные платежи для этой подписки
-            payments = Payment.query.filter_by(
-                subscription_id=subscription.id,
-                status='approved'
-            ).all()
+            participant = subscription.participant
             
-            # Показываем только тех, у кого есть подтвержденные платежи
-            if payments:
-                total_paid = sum(payment.amount for payment in payments)
-                participant = subscription.participant
-                
-                latest_auth_code = AuthorizationCode.query.filter_by(participant_id=participant.id).order_by(AuthorizationCode.created_at.desc()).first()
-                auth_code_value = latest_auth_code.code if latest_auth_code else None
-                
-                students_data.append({
-                    'participant_id': participant.id,
-                    'participant_name': participant.full_name,
-                    'parent_phone': participant.parent_phone,
-                    'birth_date': participant.birth_date.strftime('%Y-%m-%d'),
-                    'medical_certificate': participant.medical_certificate,
-                    'discount_type': participant.discount_type,
-                    'discount_percent': participant.discount_percent,
-                    'authorization_code': auth_code_value,
-                    'subscription_id': subscription.id,
-                    'subscription_type': subscription.subscription_type,
-                    'total_lessons': subscription.total_lessons,
-                    'remaining_lessons': subscription.remaining_lessons,
-                    'total_paid': total_paid,
-                    'start_date': subscription.start_date.strftime('%Y-%m-%d'),
-                    'end_date': subscription.end_date.strftime('%Y-%m-%d')
-                })
+            # Получаем информацию о платежах (если есть)
+            payments = Payment.query.filter_by(subscription_id=subscription.id).all()
+            total_paid = sum(payment.amount for payment in payments if payment.status == 'approved')
+            
+            # Получаем код авторизации
+            latest_auth_code = AuthorizationCode.query.filter_by(participant_id=participant.id).order_by(AuthorizationCode.created_at.desc()).first()
+            auth_code_value = latest_auth_code.code if latest_auth_code else None
+            
+            # Вычисляем возраст
+            today = date.today()
+            age = today.year - participant.birth_date.year - ((today.month, today.day) < (participant.birth_date.month, participant.birth_date.day))
+            
+            students_data.append({
+                'participant_id': participant.id,
+                'participant_name': participant.full_name,
+                'parent_phone': participant.parent_phone,
+                'birth_date': participant.birth_date.strftime('%Y-%m-%d'),
+                'age': age,
+                'medical_certificate': participant.medical_certificate,
+                'discount_type': participant.discount_type,
+                'discount_percent': participant.discount_percent,
+                'authorization_code': auth_code_value,
+                'subscription_id': subscription.id,
+                'subscription_type': subscription.subscription_type,
+                'total_lessons': subscription.total_lessons,
+                'remaining_lessons': subscription.remaining_lessons,
+                'total_paid': total_paid,
+                'start_date': subscription.start_date.strftime('%Y-%m-%d'),
+                'end_date': subscription.end_date.strftime('%Y-%m-%d'),
+                'has_payments': total_paid > 0
+            })
         
         # Сортируем по имени участника
         students_data.sort(key=lambda x: x['participant_name'])
@@ -1558,12 +1835,18 @@ def admin_group_participants(group_id):
             if subscription:
                 # Получаем информацию о платежах
                 payments = Payment.query.filter_by(subscription_id=subscription.id).all()
-                total_paid = sum(payment.amount for payment in payments if payment.is_paid)
+                total_paid = sum(payment.amount for payment in payments if payment.status == 'approved')
+                
+                # Вычисляем возраст
+                today = date.today()
+                age = today.year - participant.birth_date.year - ((today.month, today.day) < (participant.birth_date.month, participant.birth_date.day))
                 
                 participants_data.append({
                     'id': participant.id,
                     'full_name': participant.full_name,
                     'parent_phone': participant.parent_phone,
+                    'birth_date': participant.birth_date.strftime('%Y-%m-%d'),
+                    'age': age,
                     'subscription_type': subscription.subscription_type,
                     'total_lessons': subscription.total_lessons,
                     'remaining_lessons': subscription.remaining_lessons,
@@ -1571,7 +1854,8 @@ def admin_group_participants(group_id):
                     'start_date': subscription.start_date.strftime('%Y-%m-%d'),
                     'end_date': subscription.end_date.strftime('%Y-%m-%d'),
                     'is_active': subscription.is_active,
-                    'needs_notification': subscription.remaining_lessons <= 1
+                    'needs_notification': subscription.remaining_lessons <= 1,
+                    'has_payments': total_paid > 0
                 })
         
         return jsonify({
@@ -1708,6 +1992,10 @@ def reset_sport_groups_api():
         # Проверяем права администратора
         if session.get('role') != 'admin':
             return jsonify({'success': False, 'error': 'Доступ запрещен'}), 403
+        
+        # Удаляем все существующее расписание
+        Schedule.query.delete()
+        db.session.commit()
         
         # Удаляем все существующие группы
         SportGroup.query.delete()

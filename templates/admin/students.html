@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ученики - Админ панель</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Inter, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #ffffff;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 32px 0;
+            position: relative;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 32px;
+            left: 0;
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: #ffffff;
+            border: none;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .header h1 {
+            font-size: 36px;
+            font-weight: 800;
+            margin-bottom: 12px;
+            color: #ffffff;
+        }
+
+        .header p {
+            color: rgba(255,255,255,0.9);
+            font-size: 18px;
+            font-weight: 500;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 16px;
+        }
+
+        .btn {
+            background: rgba(255,255,255,0.2);
+            color: #ffffff;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            background: rgba(255,255,255,0.3);
+            border-color: rgba(255,255,255,0.5);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            border: none;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            border: none;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
+        }
+
+        .btn-small {
+            padding: 8px 12px;
+            font-size: 12px;
+            min-width: 40px;
+            border-radius: 6px;
+        }
+
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+        }
+
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, 0.3);
+            border-color: rgba(239, 68, 68, 0.5);
+        }
+
+        .students-table {
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 24px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            margin-bottom: 24px;
+            overflow-x: auto;
+        }
+
+        .table-header {
+            display: grid;
+            grid-template-columns: 2fr 2fr 1fr 1.5fr 1fr 2fr 1fr;
+            gap: 16px;
+            padding: 16px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 12px;
+            margin-bottom: 16px;
+            font-weight: 700;
+            color: #ffffff;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .table-header > div:first-child {
+            text-align: left;
+        }
+
+        .student-row {
+            display: grid;
+            grid-template-columns: 2fr 2fr 1fr 1.5fr 1fr 2fr 1fr;
+            gap: 16px;
+            padding: 16px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            margin-bottom: 8px;
+            align-items: center;
+            transition: all 0.3s ease;
+            min-height: 60px;
+        }
+
+        .student-row:hover {
+            background: rgba(255,255,255,0.1);
+            transform: translateX(4px);
+        }
+
+        .student-name {
+            font-weight: 600;
+            color: #ffffff;
+            text-align: left;
+        }
+
+        .student-group {
+            color: rgba(255,255,255,0.9);
+            text-align: center;
+        }
+
+        .student-age {
+            text-align: center;
+            color: rgba(255,255,255,0.8);
+            font-weight: 500;
+        }
+
+        .subscription-type {
+            color: rgba(255,255,255,0.9);
+            text-align: center;
+            font-size: 13px;
+        }
+
+        .payment-status {
+            text-align: center;
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-paid {
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+
+        .status-unpaid {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .status-pending {
+            background: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .auth-code {
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            color: #4ade80;
+            font-weight: 600;
+            text-align: center;
+            background: rgba(74, 222, 128, 0.1);
+            padding: 4px 8px;
+            border-radius: 6px;
+            border: 1px solid rgba(74, 222, 128, 0.2);
+        }
+
+        .student-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: rgba(255,255,255,0.7);
+            font-style: italic;
+        }
+
+        .no-students {
+            text-align: center;
+            padding: 40px;
+            color: rgba(255,255,255,0.7);
+            font-style: italic;
+        }
+
+        .error {
+            text-align: center;
+            padding: 20px;
+            color: #ef4444;
+            background: rgba(239, 68, 68, 0.1);
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        /* Модальное окно */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 5% auto;
+            padding: 0;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            padding: 24px;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            color: #ffffff;
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .close {
+            color: rgba(255,255,255,0.7);
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .close:hover {
+            color: #ffffff;
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 8px;
+            background: rgba(255,255,255,0.1);
+            color: #ffffff;
+            font-size: 14px;
+        }
+
+        .form-group input::placeholder {
+            color: rgba(255,255,255,0.6);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 24px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 16px;
+            }
+            
+            .header h1 {
+                font-size: 28px;
+            }
+            
+            .table-header,
+            .student-row {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+            
+            .table-header {
+                display: none;
+            }
+            
+            .student-row {
+                padding: 16px;
+                margin-bottom: 12px;
+                position: relative;
+            }
+            
+            .student-name {
+                font-size: 16px;
+                margin-bottom: 8px;
+                font-weight: 700;
+            }
+            
+            .student-group,
+            .student-age,
+            .subscription-type,
+            .payment-status,
+            .auth-code {
+                font-size: 14px;
+                margin-bottom: 4px;
+                display: flex;
+                justify-content: space-between;
+            }
+            
+            .student-group::before { content: "Группа: "; font-weight: 600; }
+            .student-age::before { content: "Возраст: "; font-weight: 600; }
+            .subscription-type::before { content: "Абонемент: "; font-weight: 600; }
+            .payment-status::before { content: "Оплата: "; font-weight: 600; }
+            .auth-code::before { content: "Код: "; font-weight: 600; }
+            
+            .student-actions {
+                margin-top: 12px;
+                justify-content: flex-end;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <button class="back-btn" onclick="goBack()">← Назад</button>
+            <h1>👥 Ученики</h1>
+            <p>Управление всеми учениками спортивных групп</p>
+            <div class="header-actions">
+                <button class="btn btn-success" onclick="openAddStudentModal()">➕ Добавить ученика</button>
+                <button class="btn btn-primary" onclick="refreshStudents()">🔄 Обновить</button>
+            </div>
+        </div>
+
+        <div id="studentsTable" class="students-table">
+            <div class="loading">Загрузка учеников...</div>
+        </div>
+    </div>
+
+    <!-- Модальное окно для добавления/редактирования ученика -->
+    <div id="studentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Добавить ученика</h2>
+                <span class="close" onclick="closeStudentModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="studentForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="fullName">ФИО *</label>
+                            <input type="text" id="fullName" name="fullName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="parentPhone">Телефон родителя *</label>
+                            <input type="tel" id="parentPhone" name="parentPhone" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="birthDate">Дата рождения *</label>
+                        <input type="date" id="birthDate" name="birthDate" required>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="sportGroup">Спортивная группа *</label>
+                            <select id="sportGroup" name="sportGroup" required>
+                                <option value="">Загрузка групп...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="subscriptionType">Тип абонемента *</label>
+                            <select id="subscriptionType" name="subscriptionType" required>
+                                <option value="">Выберите тип</option>
+                                <option value="8 занятий">8 занятий</option>
+                                <option value="12 занятий">12 занятий</option>
+                                <option value="Разовые занятия">Разовые занятия</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="medicalCertificate" name="medicalCertificate">
+                            Медицинская справка
+                        </label>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="discountType">Тип скидки</label>
+                            <select id="discountType" name="discountType">
+                                <option value="">Без скидки</option>
+                                <option value="Семейная скидка">Семейная скидка</option>
+                                <option value="Многодетная семья">Многодетная семья</option>
+                                <option value="Студенческая скидка">Студенческая скидка</option>
+                                <option value="Скидка за реферала">Скидка за реферала</option>
+                                <option value="Сезонная скидка">Сезонная скидка</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="discountPercent">Процент скидки</label>
+                            <input type="number" id="discountPercent" name="discountPercent" min="0" max="100" value="0" placeholder="0">
+                        </div>
+                    </div>
+                    
+                    <div class="modal-actions">
+                        <button type="button" class="btn" onclick="closeStudentModal()">Отмена</button>
+                        <button type="submit" class="btn btn-success">Сохранить</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html> 
