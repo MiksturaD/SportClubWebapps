@@ -45,9 +45,6 @@
         }
 
         .back-btn {
-            position: absolute;
-            top: 24px;
-            left: 24px;
             background: rgba(255,255,255,0.2);
             border: 1px solid rgba(255,255,255,0.3);
             color: #ffffff;
@@ -282,6 +279,12 @@
             font-size: 18px;
         }
 
+        .page-footer {
+            display: flex;
+            justify-content: center;
+            margin-top: 24px;
+        }
+
         @media (max-width: 768px) {
             .container {
                 padding: 16px;
@@ -303,19 +306,12 @@
                 flex-direction: column;
                 gap: 12px;
             }
-            
-            .back-btn {
-                position: relative;
-                top: auto;
-                left: auto;
-                margin-bottom: 20px;
-            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <button class="back-btn" onclick="goBack()">← Назад</button>
+        <!-- Удалили верхнюю кнопку Назад -->
         
         <div class="header">
             <h1 id="groupTitle">Группа</h1>
@@ -350,6 +346,10 @@
             <div id="studentsList" class="students-list">
                 <div class="loading">Загрузка учеников...</div>
             </div>
+        </div>
+
+        <div class="page-footer">
+            <button class="back-btn" onclick="goBack()">← Назад</button>
         </div>
     </div>
 

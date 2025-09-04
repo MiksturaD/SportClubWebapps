@@ -33,9 +33,6 @@
         }
 
         .back-btn {
-            position: absolute;
-            top: 32px;
-            left: 0;
             background: rgba(255,255,255,0.2);
             border: 1px solid rgba(255,255,255,0.3);
             color: #ffffff;
@@ -238,6 +235,12 @@
             font-size: 18px;
         }
 
+        .page-footer {
+            display: flex;
+            justify-content: center;
+            margin-top: 24px;
+        }
+
         @media (max-width: 768px) {
             .container {
                 padding: 16px;
@@ -257,13 +260,6 @@
             
             .group-stats {
                 grid-template-columns: repeat(2, 1fr);
-            }
-            
-            .back-btn {
-                position: relative;
-                top: auto;
-                left: auto;
-                margin-bottom: 20px;
             }
         }
 
@@ -330,7 +326,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <button class="back-btn" onclick="goBack()">← Назад</button>
+            <!-- Кнопка назад перенесена вниз -->
             <h1>🏃‍♂️ Группы занятий</h1>
             <p>Управление всеми спортивными группами</p>
             <div class="header-actions">
@@ -352,6 +348,10 @@
             
             <button class="btn" onclick="clearLogs()">Очистить логи</button>
             <div id="testOutput" style="margin-top: 10px; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 5px; color: white; max-height: 200px; overflow-y: auto;"></div>
+        </div>
+
+        <div class="page-footer">
+            <button class="back-btn" onclick="goBack()">← Назад</button>
         </div>
     </div>
 
@@ -541,13 +541,6 @@
         function openGroupAdmin(groupId) {
             window.location.href = `/admin/group/${groupId}`;
         }
-
-
-
-
-
-
-
 
 
 

@@ -28,6 +28,7 @@
         .header {
             display: flex;
             align-items: center;
+            justify-content: center;
             margin-bottom: 20px;
             padding-bottom: 12px;
         }
@@ -35,13 +36,13 @@
         .back-btn {
             background: rgba(255,255,255,0.06);
             border: 1px solid rgba(255,255,255,0.12);
-            width: 36px;
-            height: 36px;
+            width: auto;
+            height: auto;
             border-radius: 10px;
-            font-size: 18px;
+            font-size: 15px;
             cursor: pointer;
             color: #e5e7eb;
-            margin-right: 12px;
+            padding: 10px 14px;
         }
 
         .header h1 {
@@ -49,6 +50,7 @@
             font-weight: 800;
             color: #ffffff;
             letter-spacing: 0.3px;
+            text-align: center;
         }
 
         .group-info {
@@ -64,12 +66,14 @@
             font-weight: 800;
             margin-bottom: 8px;
             color: #ffffff;
+            text-align: center;
         }
 
         .group-description {
             font-size: 14px;
             color: #9ca3af;
             margin-bottom: 16px;
+            text-align: center;
         }
 
         .detailed-description {
@@ -122,6 +126,7 @@
             margin-bottom: 10px;
             color: #ffffff;
             letter-spacing: 0.3px;
+            text-align: center;
         }
 
         .schedule-item {
@@ -231,6 +236,12 @@
             font-style: italic;
         }
 
+        .page-footer {
+            display: flex;
+            justify-content: center;
+            margin-top: 24px;
+        }
+
         @media (max-width: 480px) {
             .container {
                 padding: 15px;
@@ -251,12 +262,15 @@
 <body>
     <div class="container">
         <div class="header">
-            <button class="back-btn" onclick="goBack()">←</button>
             <h1 id="groupTitle">Информация о группе</h1>
         </div>
 
         <div id="content">
             <div class="loading">Загрузка информации...</div>
+        </div>
+
+        <div class="page-footer">
+            <button class="back-btn" onclick="goBack()">← Назад</button>
         </div>
     </div>
 
